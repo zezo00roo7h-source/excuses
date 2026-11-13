@@ -336,6 +336,8 @@ const totalDays = sid => exOf(sid).reduce((a, e) => a + daysOf(e), 0);
 const alertDays = () => Math.max(1, parseInt(S.prefs.alertDays, 10) || 5);
 let themeSet = false;
 function applyTheme() { const t = S.prefs.theme, r = document.documentElement; if (t === 'light' || t === 'dark') { r.dataset.theme = t; themeSet = true; } else if (themeSet) { r.removeAttribute('data-theme'); themeSet = false; } }
+const schoolOf = c => (c && c.school === 2 && S.school.school2) ? S.school.school2 : (S.school.school || '');
+function schoolFor(list) { const set = new Set(); list.forEach(e => { const st = stu(e.studentId); if (st) set.add(schoolOf(cls(st.classId))); }); set.delete(''); return set.size === 1 ? [...set][0] : set.size ? [...set].join(' · ') : (S.school.school || ''); }
 const backupDays = () => S.prefs.backupDays == null ? 7 : Number(S.prefs.backupDays);
 const periodWord = n => n === 7 ? 'أسبوع' : n === 14 ? 'أسبوعين' : n === 30 ? 'شهر' : n + ' يوماً';
 const lockMin = () => S.prefs.autoLock == null ? 5 : Number(S.prefs.autoLock);
@@ -500,18 +502,18 @@ function vHome() {
   $('#view').innerHTML = `<section class="hero"><div class="head"><span class="hi">${hr < 12 ? 'صباح الخير' : 'مساء الخير'}${first ? '، ' + esc(first) : ''}</span><h2>${esc(sc.school || 'سجل أعذار الطالبات')}</h2><span class="date">${esc(hijri(t))}</span></div>
       <div class="hstats"><button class="hstat" data-act="openReport"><b>${today}</b><span>أعذار اليوم</span></button><button class="hstat" data-act="openReport"><b>${month}</b><span>هذا الشهر</span></button><button class="hstat" data-act="openReport"><b>${alerts}</b><span>تنبيهات</span></button></div></section>
     <section class="search">
-      <div class="searchbox">${IC.search}<input id="q" type="search" placeholder="ابحثي باسم الطالبة أو الفصل" value="${esc(q)}" aria-label="بحث باسم الطالبة أو الفصل"></div>
+      <div class="searchbox">${IC.search}<input id="q" type="search" placeholder="ابحثي بالاسم أو السجل المدني أو الفصل" value="${esc(q)}" aria-label="بحث باسم الطالبة أو الفصل"></div>
       <div class="daterow"><label class="field">بحث بتاريخ العذر<input id="qd" type="date" value="${esc(qd)}"></label>
       <button class="btn" data-act="clearSearch">مسح البحث</button></div></section><div id="homeList" style="display:flex;flex-direction:column;gap:16px"></div>`;
   homeList();
 }
 function classItem(c) {
   const st = stuOf(c.id), ids = new Set(st.map(s => s.id)), n = S.excuses.filter(e => ids.has(e.studentId)).length, w = st.some(s => totalDays(s.id) >= alertDays());
-  return `<button class="ccard" data-act="openClass" data-id="${c.id}"><span class="ic">${IC.users}</span><span class="name">${esc(c.name)}</span><span class="meta"><span class="count">${st.length} طالبة</span><span class="count ${w ? 'warn' : n ? 'has' : ''}">${n} عذر</span></span></button>`;
+  return `<button class="ccard" data-act="openClass" data-id="${c.id}"><span class="ic">${IC.users}</span><span class="name">${esc(c.name)}</span>${S.school.school2 ? `<span class="sub">${esc(schoolOf(c))}</span>` : ''}<span class="meta"><span class="count">${st.length} طالبة</span><span class="count ${w ? 'warn' : n ? 'has' : ''}">${n} عذر</span></span></button>`;
 }
 function studentItem(s, withClass) {
   const n = exOf(s.id).length, c = cls(s.classId);
-  return `<button class="item" data-act="openStudent" data-id="${s.id}"><span class="txt"><span class="name">${esc(s.name)}</span>${withClass ? `<span class="sub">${esc(c ? c.name : '')}</span>` : ''}</span><span class="count ${n ? 'has' : ''}">${n} عذر</span>${IC.chev}</button>`;
+  return `<button class="item" data-act="openStudent" data-id="${s.id}"><span class="txt"><span class="name">${esc(s.name)}</span>${withClass ? `<span class="sub">${esc(c ? c.name : '')}${s.nid ? ' · ' + bdi(s.nid) : ''}</span>` : ''}</span><span class="count ${n ? 'has' : ''}">${n} عذر</span>${IC.chev}</button>`;
 }
 function folderTile(s) {
   const n = exOf(s.id).length, d = totalDays(s.id), w = n && d >= alertDays();
@@ -546,7 +548,7 @@ function homeList() {
     h += `<div class="sec-title"><h2>أعذار ${esc(hijri(qd) || qd)}</h2>${ex.length ? `<button class="btn small" data-act="pdfDate">${IC.pdf} تصدير PDF</button>` : ''}</div>`;
     h += ex.length ? `<div class="list">${ex.map(e => excuseItem(e, true)).join('')}</div>` : `<div class="empty">لا توجد أعذار مسجلة بهذا التاريخ${n ? ' تطابق البحث' : ''}.</div>`;
   } else {
-    const cs = S.classes.filter(c => norm(c.name).includes(n)), ss = S.students.filter(s => norm(s.name).includes(n)).sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+    const cs = S.classes.filter(c => norm(c.name).includes(n)), ss = S.students.filter(s => norm(s.name).includes(n) || (s.nid && toLatin(q).replace(/\s+/g, '').length >= 3 && s.nid.includes(toLatin(q).replace(/\s+/g, '')))).sort((a, b) => a.name.localeCompare(b.name, 'ar'));
     if (cs.length) h += `<h2>الفصول</h2><div class="ccards">${cs.map(classItem).join('')}</div>`;
     if (ss.length) h += `<h2>الطالبات</h2><div class="list">${ss.slice(0, 60).map(s => studentItem(s, true)).join('')}</div>`;
     if (!cs.length && !ss.length) h += `<div class="empty">لا توجد نتائج تطابق «${esc(q)}».</div>`;
@@ -563,6 +565,7 @@ function vClass(top) {
   const st = stuOf(c.id); $('#barTitle').textContent = c.name;
   const ids = new Set(st.map(s => s.id)), ex = S.excuses.filter(e => ids.has(e.studentId));
   $('#view').innerHTML = `<div class="pagehead"><span class="ic">${IC.users}</span><div class="head"><h2>${esc(c.name)}</h2><p class="sub">${st.length} طالبة · ${ex.length} عذر · ${dayWord(ex.reduce((a, e) => a + daysOf(e), 0))} غياب</p></div></div>
+    ${S.school.school2 ? `<label class="field">مدرسة الفصل<select id="clsSchool"><option value="1" ${c.school !== 2 ? 'selected' : ''}>${esc(S.school.school || 'المدرسة الأساسية')}</option><option value="2" ${c.school === 2 ? 'selected' : ''}>${esc(S.school.school2)}</option></select></label>` : ''}
     <div class="actions"><button class="btn primary grow" data-act="bulk">${IC.userplus} إضافة طالبات</button><button class="btn grow" data-act="pdfClass">${IC.pdf} PDF أعذار الفصل</button></div>
     ${st.length ? `<div class="tiles">${st.map(folderTile).join('')}</div>` : `<div class="empty">${IC.userplus}<span>لا توجد طالبات في هذا الفصل. اضغطي «إضافة طالبات» والصقي القائمة كاملة أو ارفعي ملف الأسماء.</span></div>`}
     <div class="actions"><button class="btn small" data-act="renameClass">${IC.edit} تعديل اسم الفصل</button><button class="btn small danger" data-act="askDelClass">${IC.trash} حذف الفصل</button></div>`;
@@ -570,11 +573,11 @@ function vClass(top) {
 function vStudent(top) {
   const s = stu(top.id); if (!s) return back();
   const c = cls(s.classId), ex = exOf(s.id), d = totalDays(s.id), al = alertDays(); $('#barTitle').textContent = s.name;
-  $('#view').innerHTML = `<div class="pagehead">${avatar(s.name)}<div class="head"><h2>${esc(s.name)}</h2><p class="sub">${esc(c ? c.name : '')} · ${ex.length} عذر · ${dayWord(d)} غياب</p></div></div>
+  $('#view').innerHTML = `<div class="pagehead">${avatar(s.name)}<div class="head"><h2>${esc(s.name)}</h2><p class="sub">${esc(c ? c.name : '')} · ${ex.length} عذر · ${dayWord(d)} غياب</p><p class="sub">السجل المدني: ${s.nid ? bdi(s.nid) : '<span>لم يُسجّل</span>'}</p></div></div>
     ${ex.length && d >= al ? `<div class="notice">تجاوزت الطالبة حد التنبيه: ${dayWord(d)} غياب بعذر (الحد ${al}).</div>` : ''}
     <div class="actions"><button class="btn primary grow" data-act="newExcuse">${IC.plus} عذر جديد</button>${ex.length ? `<button class="btn grow" data-act="pdfStudent">${IC.pdf} طباعة أو مشاركة الملف (PDF)</button>` : ''}</div>
     ${ex.length ? `<div class="list">${ex.map(e => excuseItem(e)).join('')}</div>` : `<div class="empty">${IC.file}<span>لا توجد أعذار محفوظة لهذه الطالبة بعد.</span></div>`}
-    <div class="actions"><button class="btn small" data-act="renameStudent">${IC.edit} تعديل الاسم</button><button class="btn small" data-act="moveStudent">${IC.move} نقل لفصل آخر</button><button class="btn small danger" data-act="askDelStudent">${IC.trash} حذف الطالبة</button></div>`;
+    <div class="actions"><button class="btn small" data-act="renameStudent">${IC.edit} تعديل البيانات</button><button class="btn small" data-act="moveStudent">${IC.move} نقل لفصل آخر</button><button class="btn small danger" data-act="askDelStudent">${IC.trash} حذف الطالبة</button></div>`;
 }
 /* ---------- التقارير ---------- */
 let rp = null;
@@ -629,6 +632,7 @@ async function vSettings() {
     <p class="sub">تظهر في الرئيسية وفي رأس كل ورقة مطبوعة وخانة التوقيع.</p>
     <form id="schoolForm" style="display:flex;flex-direction:column;gap:12px">
     <label class="field">اسم المدرسة<input id="scSchool" maxlength="80" autocomplete="off" value="${esc(sc.school || '')}"></label>
+    <label class="field">مدرسة ثانية بنفس الإدارة (اختياري)<input id="scSchool2" maxlength="80" autocomplete="off" placeholder="مثال: الثانوية الأولى (كبيرات)" value="${esc(sc.school2 || '')}"><span class="sub">إذا كتبتِها تختارين لكل فصل مدرسته، ويُطبع اسمها تلقائياً.</span></label>
     <label class="field">اسم الإدارية المسؤولة<input id="scAdmin" maxlength="80" autocomplete="off" value="${esc(sc.admin || '')}"></label>
     <label class="field">اسم مديرة المدرسة<input id="scPrincipal" maxlength="80" autocomplete="off" value="${esc(sc.principal || '')}"></label>
     <button class="btn primary" type="submit">حفظ بيانات المدرسة</button></form></section>
@@ -657,30 +661,39 @@ async function vSettings() {
 }
 
 /* ---------- النماذج ---------- */
-function nameForm(title, label, value, act) {
-  openModal(sheetHead(title) + `<form id="nameForm" data-kind="${act}"><label class="field">${esc(label)}<input id="nameInput" value="${esc(value)}" required maxlength="80" autocomplete="off"></label><button class="btn primary" type="submit">حفظ</button></form>`);
+function nameForm(title, label, value, act, nid) {
+  openModal(sheetHead(title) + `<form id="nameForm" data-kind="${act}"><label class="field">${esc(label)}<input id="nameInput" value="${esc(value)}" required maxlength="80" autocomplete="off"></label>${nid != null ? `<label class="field">رقم السجل المدني<input id="nidInput" value="${esc(nid)}" maxlength="24" inputmode="numeric" dir="ltr" autocomplete="off" placeholder="مثال: 1123456789"></label>` : ''}<button class="btn primary" type="submit">حفظ</button></form>`);
   setTimeout(() => { const i = $('#nameInput'); if (i) i.focus(); }, 50);
 }
 function bulkForm() {
   openModal(sheetHead('إضافة طالبة أو قائمة طالبات') + `<form id="bulkForm">
-    <p class="sub">اكتبي اسماً واحداً، أو الصقي قائمة الأسماء (كل اسم في سطر، والأرقام والترقيم تُحذف تلقائياً)، أو ارفعي ملف Excel أو CSV أو نصي وسنستخرج الأسماء منه لمراجعتها قبل الحفظ.</p>
+    <p class="sub">اكتبي اسماً واحداً، أو الصقي قائمة الأسماء (كل طالبة في سطر). إذا كان رقم السجل المدني في نفس السطر يُحفظ معها تلقائياً، وأرقام التسلسل تُحذف، أو ارفعي ملف Excel أو CSV أو نصي وسنستخرج الأسماء منه لمراجعتها قبل الحفظ.</p>
     <label class="btn"><input class="vh" id="bulkFile" type="file" accept=".xlsx,.xls,.csv,.txt,text/plain,text/csv">${IC.file} رفع ملف الأسماء</label>
-    <label class="field">الأسماء<textarea id="bulkText" rows="9" placeholder="اسم الطالبة الأولى&#10;اسم الطالبة الثانية&#10;..."></textarea></label>
+    <label class="field">الأسماء<textarea id="bulkText" rows="9" placeholder="1123456789  اسم الطالبة الأولى&#10;اسم الطالبة الثانية&#10;..."></textarea></label>
     <p class="sub" id="bulkCount">0 اسم</p><button class="btn primary" type="submit">إضافة الطالبات</button></form>`);
 }
 const HEADER_RE = /^(م|الاسم|اسم|اسم الطالب[ةه]?|الاسم (الرباعي|الكامل|الثلاثي)|أسماء الطالبات|الفصل|الصف|الشعبة|المرحلة|رقم .*|السجل المدني|رقم الهوية|الجنسية|ملاحظات|التوقيع)$/;
 const cleanName = t => String(t || '').replace(/[0-9\u0660-\u0669\u06F0-\u06F9]+/g, ' ').replace(/[|_.,،؛:;()\[\]{}*#\/\\\u2013\u2014-]+/g, ' ').replace(/\s+/g, ' ').trim();
-const bulkNames = () => [...new Set(($('#bulkText').value || '').split(/\r?\n/).map(cleanName).filter(v => v.length >= 3 && /[\u0621-\u064Aa-zA-Z]/.test(v) && !HEADER_RE.test(v)))];
+const toLatin = t => String(t || '').replace(/[\u0660-\u0669]/g, d => d.charCodeAt(0) - 0x660).replace(/[\u06F0-\u06F9]/g, d => d.charCodeAt(0) - 0x6F0);
+const NID_RE = /[0-9]{1,12}(?:\/[0-9]{1,12})+|[0-9]{5,}/;
+const cleanNid = t => { const m = toLatin(t).replace(/\s+/g, '').match(NID_RE); return m ? m[0] : ''; };
+function parseLine(line) { const l = toLatin(line), m = l.match(NID_RE); return {name:cleanName(m ? l.replace(m[0], ' ') : l), nid:m ? m[0] : ''}; }
+const bulkEntries = () => { const seen = new Set(), out = []; for (const ln of ($('#bulkText').value || '').split(/\r?\n/)) { const r = parseLine(ln); if (r.name.length >= 3 && /[\u0621-\u064Aa-zA-Z]/.test(r.name) && !HEADER_RE.test(r.name) && !HEADER_WORDS.test(r.name) && !seen.has(norm(r.name))) { seen.add(norm(r.name)); out.push(r); } } return out; };
+const HEADER_WORDS = /السجل المدني|رقم الهوية|اسم الطالب|أسماء الطالبات|(^|\s)(الاسم|م)(\s|$)/;
+const bdi = t => `<bdi dir="ltr">${esc(t)}</bdi>`;
+const bulkNames = () => bulkEntries().map(r => r.name);
+const bulkNamesOld = () => [...new Set(($('#bulkText').value || '').split(/\r?\n/).map(cleanName).filter(v => v.length >= 3 && /[\u0621-\u064Aa-zA-Z]/.test(v) && !HEADER_RE.test(v)))];
 function namesFromRows(rows) {
-  const out = [];
+  const out = [], seen = new Set();
   for (const row of rows) {
-    const cells = (Array.isArray(row) ? row : [row]).map(v => String(v == null ? '' : v).replace(/\s+/g, ' ').trim())
-      .filter(v => v.length >= 3 && /[ء-يa-zA-Z]/.test(v) && !/\d/.test(v) && !/^(الاسم|اسم|اسم الطالب[ةه]?|الاسم (الرباعي|الكامل|الثلاثي)|أسماء الطالبات|الفصل|الصف|الشعبة|المرحلة|رقم .*|السجل المدني|الجنسية|ملاحظات)$/.test(v));
+    const raw = (Array.isArray(row) ? row : [row]).map(v => String(v == null ? '' : v).replace(/\s+/g, ' ').trim());
+    const nidCell = raw.map(v => toLatin(v).replace(/\s+/g, '')).find(v => /^[0-9]{1,12}(\/[0-9]{1,12})+$|^[0-9]{5,}$/.test(v)) || '';
+    const cells = raw.filter(v => v.length >= 3 && /[\u0621-\u064Aa-zA-Z]/.test(v) && !/[0-9\u0660-\u0669]/.test(v) && !HEADER_RE.test(v));
     if (!cells.length) continue;
-    const multi = cells.filter(v => v.includes(' '));
-    out.push((multi.length ? multi : cells).sort((a, b) => b.length - a.length)[0]);
+    const multi = cells.filter(v => v.includes(' ')), name = (multi.length ? multi : cells).sort((a, b) => b.length - a.length)[0];
+    if (seen.has(norm(name))) continue; seen.add(norm(name)); out.push({name, nid:nidCell});
   }
-  return [...new Set(out)];
+  return out;
 }
 async function readNamesFile(file) {
   const buf = await file.arrayBuffer();
@@ -778,12 +791,12 @@ function doShare(files, text) {
   return navigator.share(text ? {files, text} : {files}).then(() => true).catch(err => { if (!(err && err.name === 'AbortError')) toast('تعذرت المشاركة من هنا. احفظي الملف ثم أرسليه.'); return false; });
 }
 async function markBackup() { S.lastBackup = Date.now(); try { await raw.put('meta', {id:'lastBackup', t:S.lastBackup}); } catch (e) {} }
-async function makeDoc(title, sub) {
+async function makeDoc(title, sub, schoolName) {
   const HF = '"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif', BF = '"IBM Plex Sans Arabic",Tahoma,sans-serif';
   try { await Promise.all([document.fonts.load('600 30px "Readex Pro"', 'س'), document.fonts.load('400 24px "IBM Plex Sans Arabic"', 'س'), document.fonts.load('600 24px "IBM Plex Sans Arabic"', 'س')]); } catch (e) {}
   const W = 1240, H = 1754, M = 90, R = W - M, INK = '#1C2B2E', MUT = '#5A6C6E', LINE = '#C9D3D1';
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d', {willReadFrequently:true});
-  const sc = S.school || {}, so = sc.school ? 48 : 0;
+  const sc = S.school || {}, sn = schoolName || sc.school || '', so = sn ? 48 : 0;
   const d = {W, H, M, R, x, INK, MUT, HF, BF, pages:[], pageNo:0};
   d.start = () => { x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); const g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(0, '#8C1F52'); g.addColorStop(1, '#C2376F'); x.fillStyle = g; x.fillRect(0, 0, W, 14); x.direction = 'rtl'; x.textAlign = 'right'; x.textBaseline = 'alphabetic'; d.pageNo++; };
   d.flush = async () => {
@@ -791,7 +804,7 @@ async function makeDoc(title, sub) {
     const blob = await new Promise(res => cv.toBlob(res, 'image/jpeg', .88)); if (!blob) throw new Error('page');
     d.pages.push(new Uint8Array(await blob.arrayBuffer()));
   };
-  d.header = () => { x.textAlign = 'right'; if (so) { x.fillStyle = INK; x.font = '600 28px ' + HF; x.fillText(fit(x, sc.school, W - 2 * M), R, M + 14); } x.fillStyle = INK; x.font = '600 40px ' + HF; x.fillText(fit(x, title, W - 2 * M), R, M + 30 + so); x.fillStyle = MUT; x.font = '24px ' + BF; x.fillText(fit(x, sub, W - 2 * M), R, M + 76 + so); x.strokeStyle = INK; x.lineWidth = 2; x.beginPath(); x.moveTo(M, M + 100 + so); x.lineTo(R, M + 100 + so); x.stroke(); return M + 100 + so; };
+  d.header = () => { x.textAlign = 'right'; if (so) { x.fillStyle = INK; x.font = '600 28px ' + HF; x.fillText(fit(x, sn, W - 2 * M), R, M + 14); } x.fillStyle = INK; x.font = '600 40px ' + HF; x.fillText(fit(x, title, W - 2 * M), R, M + 30 + so); x.fillStyle = MUT; x.font = '24px ' + BF; x.fillText(fit(x, sub, W - 2 * M), R, M + 76 + so); x.strokeStyle = INK; x.lineWidth = 2; x.beginPath(); x.moveTo(M, M + 100 + so); x.lineTo(R, M + 100 + so); x.stroke(); return M + 100 + so; };
   d.page = () => { d.start(); return d.header() + 24; };
   d.room = async (y, h) => { if (y + h > H - 110) { await d.flush(); return d.page(); } return y; };
   d.section = async (y, t) => { y = await d.room(y, 190); x.textAlign = 'right'; x.fillStyle = INK; x.font = '600 28px ' + HF; x.fillText(t, R, y + 36); return y + 56; };
@@ -822,9 +835,9 @@ async function makeDoc(title, sub) {
   };
   d.photoPage = async (img, e, k, n, low) => {
     const s = stu(e.studentId), c = s && cls(s.classId), end = endOf(e);
-    d.start(); if (so) { x.textAlign = 'left'; x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText(fit(x, sc.school, 320), M, M + 26); x.textAlign = 'right'; }
+    d.start(); if (so) { x.textAlign = 'left'; x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText(fit(x, schoolOf(cls((stu(e.studentId) || {}).classId)) || sn, 320), M, M + 26); x.textAlign = 'right'; }
     x.fillStyle = INK; x.font = '600 34px ' + HF; x.fillText(fit(x, s ? s.name : '', W - 2 * M - (so ? 340 : 0)), R, M + 26);
-    x.fillStyle = MUT; x.font = '24px ' + BF; x.fillText(fit(x, (c ? c.name + '  ·  ' : '') + catName(e.category) + '  ·  ' + dayWord(daysOf(e)) + (n > 1 ? '  ·  صورة ' + (k + 1) + ' من ' + n : ''), W - 2 * M), R, M + 70);
+    x.fillStyle = MUT; x.font = '24px ' + BF; x.fillText(fit(x, (c ? c.name + '  ·  ' : '') + (s && s.nid ? 'س.م ' + s.nid + '  ·  ' : '') + catName(e.category) + '  ·  ' + dayWord(daysOf(e)) + (n > 1 ? '  ·  صورة ' + (k + 1) + ' من ' + n : ''), W - 2 * M), R, M + 70);
     x.fillText(fit(x, (hijri(e.date) || e.date) + (end !== e.date ? ' إلى ' + (hijri(end) || end) : '') + '  (' + e.date + (end !== e.date ? ' إلى ' + end : '') + ')', W - 2 * M), R, M + 108);
     let ty = M + 150; if (low) { x.fillStyle = '#A8433F'; x.font = '600 22px ' + BF; x.fillText('صورة مصغّرة: الأصل لم يُحفظ كاملاً، يُفضّل إعادة إرفاقها.', R, ty); ty += 36; } x.fillStyle = INK; x.font = '22px ' + BF; if (e.notes) wrapText(x, e.notes, W - 2 * M, 3).forEach(l => { x.fillText(l, R, ty); ty += 32; });
     const top = ty + 8, bw = W - 2 * M, bh = H - 110 - top, r = Math.min(bw / img.naturalWidth, bh / img.naturalHeight), iw = img.naturalWidth * r, ih = img.naturalHeight * r, ix = (W - iw) / 2;
@@ -834,16 +847,16 @@ async function makeDoc(title, sub) {
   d.blob = () => buildPDF(d.pages, W, H);
   return d;
 }
-async function exportPDF(title, sub, list, withStudent) {
+async function exportPDF(title, sub, list, withStudent, schoolName) {
   if (!list.length) return toast('لا توجد أعذار للتصدير');
   toast('جارٍ تجهيز الملف…');
-  const d = await makeDoc(title, sub);
+  const d = await makeDoc(title, sub, schoolName || schoolFor(list));
   let y = d.page();
   const heads = withStudent ? ['م', 'الطالبة', 'تاريخ العذر', 'الأيام', 'التصنيف', 'ملاحظات'] : ['م', 'تاريخ العذر', 'الأيام', 'التصنيف', 'ملاحظات'];
-  const widths = withStudent ? [56, 260, 240, 80, 150] : [56, 300, 100, 190];
+  const widths = withStudent ? [56, 235, 290, 70, 135] : [56, 310, 90, 190];
   const rows = list.map((e, i) => {
     const s = stu(e.studentId), c = s && cls(s.classId), end = endOf(e), r = [String(i + 1)];
-    if (withStudent) r.push({t:s ? s.name : '', s:c ? c.name : '', b:true});
+    if (withStudent) r.push({t:s ? s.name : '', s:withStudent === 'class' ? (s && s.nid ? 'س.م ' + s.nid : '') : (c ? c.name : '') + (s && s.nid ? ' · ' + s.nid : ''), b:true});
     r.push({t:hijri(e.date) || e.date, s:end !== e.date ? e.date + ' إلى ' + end : e.date}, String(daysOf(e)), catName(e.category), {t:e.notes || '—', wrap:true});
     return r;
   });
@@ -862,7 +875,7 @@ async function exportPDF(title, sub, list, withStudent) {
 async function reportPDF() {
   const D = rpData(); if (!D.total) return toast('لا توجد أعذار في هذه الفترة');
   toast('جارٍ تجهيز التقرير…');
-  const d = await makeDoc('تقرير أعذار الطالبات', 'الفترة: ' + rpLabel()), x = d.x, al = alertDays();
+  const d = await makeDoc('تقرير أعذار الطالبات', 'الفترة: ' + rpLabel(), schoolFor(D.list)), x = d.x, al = alertDays();
   let y = d.page();
   const bw = (d.W - 2 * d.M - 40) / 3;
   [['عدد الأعذار', D.total], ['أيام الغياب', D.days], ['عدد الطالبات', D.students.length]].forEach(([l, v], i) => {
@@ -872,7 +885,7 @@ async function reportPDF() {
   x.textAlign = 'right'; y += 156;
   y = await d.section(y, 'حسب التصنيف'); y = await d.table(y, ['التصنيف', 'عدد الأعذار', 'أيام الغياب'], [420, 260], D.cats.filter(c => c.n).map(c => [c.l, String(c.n), String(c.d)]));
   y = await d.section(y + 24, 'حسب الفصل'); y = await d.table(y, ['الفصل', 'عدد الأعذار', 'أيام الغياب'], [420, 260], D.classes.map(r => [r.c.name, String(r.n), String(r.d)]));
-  y = await d.section(y + 24, 'تفصيل الطالبات'); y = await d.table(y, ['م', 'الطالبة', 'الأعذار', 'أيام الغياب', 'ملاحظة'], [56, 420, 120, 160], D.students.map((r, i) => { const c = cls(r.s.classId); return [String(i + 1), {t:r.s.name, s:c ? c.name : '', b:true}, String(r.n), String(r.d), r.d >= al ? {t:'تجاوزت حد التنبيه (' + al + ')', color:'#A8433F', b:true} : '']; }));
+  y = await d.section(y + 24, 'تفصيل الطالبات'); y = await d.table(y, ['م', 'الطالبة', 'الأعذار', 'أيام الغياب', 'ملاحظة'], [56, 420, 120, 160], D.students.map((r, i) => { const c = cls(r.s.classId); return [String(i + 1), {t:r.s.name, s:(c ? c.name : '') + (r.s.nid ? ' · ' + r.s.nid : ''), b:true}, String(r.n), String(r.d), r.d >= al ? {t:'تجاوزت حد التنبيه (' + al + ')', color:'#A8433F', b:true} : '']; }));
   await d.sign(y); await d.flush();
   fileReady('تقرير الأعذار ' + todayISO() + '.pdf', d.blob(), 'pdf');
 }
@@ -898,11 +911,12 @@ async function readRestore(file) {
         for (const s of ENC) for (const v of (r[s] || [])) if (v && v.id) await raw.put(s, v.ct ? {id:v.id, iv:unb64(v.iv), ct:unb64(v.ct)} : v);
         await raw.put('meta', {id:'key', salt:unb64(r.key.salt), iv:unb64(r.key.iv), wrapped:unb64(r.key.wrapped), iter:r.key.iter});
         if (r.prefs && typeof r.prefs === 'object') await raw.put('meta', {id:'prefs', alertDays:parseInt(r.prefs.alertDays, 10) || 5, autoLock:r.prefs.autoLock == null ? 5 : Number(r.prefs.autoLock) || 0, theme:['light','dark'].includes(r.prefs.theme) ? r.prefs.theme : 'auto', backupDays:r.prefs.backupDays == null ? 7 : Number(r.prefs.backupDays) || 0});
-        if (r.school && typeof r.school === 'object') await raw.put('meta', {id:'school', school:String(r.school.school || ''), admin:String(r.school.admin || ''), principal:String(r.school.principal || '')});
+        if (r.school && typeof r.school === 'object') await raw.put('meta', {id:'school', school:String(r.school.school || ''), school2:String(r.school.school2 || ''), admin:String(r.school.admin || ''), principal:String(r.school.principal || '')});
         await raw.del('meta', 'pin'); await raw.put('meta', {id:'enc', done:true}); await raw.put('meta', {id:'seed', demo:false});
         S.classes = []; S.students = []; S.excuses = []; await renderLock(); toast('تمت الاستعادة. أدخلي رمز الدخول الخاص بهذه النسخة');
       } else {
         for (const s of ENC) for (const v of (r[s] || [])) if (v && v.id) await db.put(s, v);
+        if (r.school && typeof r.school === 'object') await raw.put('meta', {id:'school', school:String(r.school.school || ''), school2:String(r.school.school2 || ''), admin:String(r.school.admin || ''), principal:String(r.school.principal || '')});
         await db.put('meta', {id:'seed', demo:false}); await loadAll(); nav = [{v:'home'}]; render(); toast('تمت الاستعادة');
       }
     });
@@ -928,7 +942,7 @@ const ACT = {
   clearSearch: () => { q = ''; qd = ''; vHome(); },
   addClass: () => nameForm('فصل جديد', 'اسم الفصل (مثال: ثاني ثانوي / 3)', '', 'addClass'),
   renameClass: () => nameForm('تعديل اسم الفصل', 'اسم الفصل', cls(topId()).name, 'renameClass'),
-  renameStudent: () => nameForm('تعديل اسم الطالبة', 'اسم الطالبة', stu(topId()).name, 'renameStudent'),
+  renameStudent: () => { const s = stu(topId()); nameForm('تعديل بيانات الطالبة', 'اسم الطالبة', s.name, 'renameStudent', s.nid || ''); },
   bulk: bulkForm,
   quickExcuse: () => { openModal(sheetHead('تسجيل عذر جديد') + '<label class="field">اكتبي اسم الطالبة ثم اختاريها<input id="qs" type="search" autocomplete="off" placeholder="أول حروف الاسم"></label><div id="qsList"></div>'); qsList(); },
   pickStudent: el => { const s = stu(el.dataset.id); if (!s) return; closeModal(); nav = [{v:'home'}, {v:'cls', id:s.classId}, {v:'stu', id:s.id}]; render(); excuseForm(null); },
@@ -942,8 +956,8 @@ const ACT = {
   askWipeAll: () => confirmBox('مسح كل البيانات', 'ستُحذف جميع الفصول والطالبات والأعذار والصور من هذا الجهاز نهائياً. احفظي نسخة احتياطية أولاً إن احتجتِ إليها.', 'مسح كل شيء', async () => { await wipeAll(true); nav = [{v:'home'}]; render(); toast('مُسحت كل البيانات'); }),
   changePin: () => openModal(sheetHead('تغيير رمز الدخول') + `<form id="pinForm"><label class="field">الرمز الحالي<input id="pinOld" type="password" inputmode="numeric" autocomplete="off" required></label><label class="field">الرمز الجديد (6 أرقام أو أكثر)<input id="pinNew" type="password" inputmode="numeric" autocomplete="off" minlength="6" required></label><p class="err" id="pinErr"></p><button class="btn primary" type="submit">حفظ الرمز الجديد</button></form>`),
   backup,
-  pdfStudent: () => { const s = stu(topId()), c = cls(s.classId); exportPDF('سجل أعذار الطالبة ' + s.name, 'الفصل: ' + (c ? c.name : ''), exOf(s.id), false); },
-  pdfClass: () => { const c = cls(topId()), ids = new Set(stuOf(c.id).map(s => s.id)); exportPDF('أعذار فصل ' + c.name, 'جميع الأعذار المسجلة لطالبات الفصل', S.excuses.filter(e => ids.has(e.studentId)).sort((a, b) => b.date.localeCompare(a.date)), true); },
+  pdfStudent: () => { const s = stu(topId()), c = cls(s.classId); exportPDF('سجل أعذار الطالبة ' + s.name, 'الفصل: ' + (c ? c.name : '') + (s.nid ? '   ·   السجل المدني: ' + s.nid : ''), exOf(s.id), false, schoolOf(c)); },
+  pdfClass: () => { const c = cls(topId()), ids = new Set(stuOf(c.id).map(s => s.id)); exportPDF('أعذار فصل ' + c.name, 'جميع الأعذار المسجلة لطالبات الفصل', S.excuses.filter(e => ids.has(e.studentId)).sort((a, b) => b.date.localeCompare(a.date)), 'class'); },
   pdfDate: () => exportPDF('أعذار يوم ' + qd, hijri(qd), searchExcuses(), true),
   pdfReport: () => reportPDF(),
   openReport: () => tabTo('report'),
@@ -976,7 +990,7 @@ document.addEventListener('input', e => {
   if (e.target.id === 'qs') qsList();
   else if (e.target.id === 'q') { q = e.target.value; homeList(); }
   else if (e.target.id === 'qd') { qd = e.target.value; homeList(); }
-  else if (e.target.id === 'bulkText') $('#bulkCount').textContent = bulkNames().length + ' اسم';
+  else if (e.target.id === 'bulkText') { const en = bulkEntries(), k = en.filter(r => r.nid).length; $('#bulkCount').textContent = en.length + ' اسم' + (k ? ' · ' + k + ' منها مع السجل المدني' : ''); }
   else if (e.target.id === 'exDate' || e.target.id === 'exTo') {
     const a = $('#exDate').value; let b = $('#exTo').value;
     if (a && (!b || b < a)) { $('#exTo').value = a; b = a; }
@@ -985,6 +999,7 @@ document.addEventListener('input', e => {
   else if (e.target.id === 'rpFrom' || e.target.id === 'rpTo') { rp = {k:'custom', from:$('#rpFrom').value, to:$('#rpTo').value}; rpBody(); }
 });
 document.addEventListener('change', async e => {
+  if (e.target.id === 'clsSchool') { const c = cls(topId()); if (!c) return; c.school = e.target.value === '2' ? 2 : 1; try { await db.put('classes', c); toast('حُفظت مدرسة الفصل'); } catch (err) { toast('تعذر الحفظ'); } return; }
   const t = e.target, f = t.files && t.files[0]; if (!f) return;
   try {
     if (t.id === 'exCam' || t.id === 'exGal') {
@@ -997,9 +1012,9 @@ document.addEventListener('change', async e => {
       if ($('#exSave')) $('#exSave').disabled = false;
       if (st) st.textContent = bad ? 'تعذرت قراءة ' + (bad > 1 ? bad + ' صور' : 'صورة') + '، جرّبي صورة أخرى.' : (t.files.length > room ? 'أُضيفت ' + room + ' فقط، الحد ' + MAXPH + ' صور.' : '');
     } else if (t.id === 'bulkFile') {
-      const names = await readNamesFile(f);
-      if (!names.length) return toast('لم نجد أسماء في الملف. الصقي الأسماء يدوياً في المربع.');
-      $('#bulkText').value = names.join('\n'); $('#bulkCount').textContent = names.length + ' اسم — راجعي القائمة ثم اضغطي إضافة';
+      const list = await readNamesFile(f);
+      if (!list.length) return toast('لم نجد أسماء في الملف. الصقي الأسماء يدوياً في المربع.');
+      $('#bulkText').value = list.map(r => (r.nid ? r.nid + '  ' : '') + r.name).join('\n'); $('#bulkCount').textContent = list.length + ' اسم' + (list.some(r => r.nid) ? ' مع السجل المدني' : '') + ' — راجعي القائمة ثم اضغطي إضافة';
     } else if (t.id === 'restoreFile') await readRestore(f);
   } catch (err) {
     console.error(err);
@@ -1013,7 +1028,7 @@ document.addEventListener('submit', async e => {
   try {
     if (f.id === 'schoolForm') {
       const cl = id => $(id).value.replace(/\s+/g, ' ').trim();
-      S.school = {id:'school', school:cl('#scSchool'), admin:cl('#scAdmin'), principal:cl('#scPrincipal')};
+      S.school = {id:'school', school:cl('#scSchool'), school2:cl('#scSchool2'), admin:cl('#scAdmin'), principal:cl('#scPrincipal')};
       await raw.put('meta', S.school); toast('حُفظت بيانات المدرسة');
     } else if (f.id === 'prefsForm') {
       S.prefs = {id:'prefs', alertDays:Math.min(99, Math.max(1, parseInt($('#pfAlert').value, 10) || 5)), autoLock:Number($('#pfLock').value) || 0, theme:$('#pfTheme').value, backupDays:Number($('#pfBackup').value) || 0};
@@ -1041,12 +1056,16 @@ document.addEventListener('submit', async e => {
     } else if (f.id === 'nameForm') {
       const v = $('#nameInput').value.replace(/\s+/g, ' ').trim(), kind = f.dataset.kind; if (!v) return;
       if (kind === 'addClass') { const c = {id:'c' + uid(), name:v, created:Date.now()}; await db.put('classes', c); S.classes.push(c); closeModal(); go({v:'cls', id:c.id}); return; }
-      const o = kind === 'renameClass' ? cls(topId()) : stu(topId()); o.name = v; await db.put(kind === 'renameClass' ? 'classes' : 'students', o); closeModal(); render();
+      const o = kind === 'renameClass' ? cls(topId()) : stu(topId()); o.name = v; if (kind === 'renameStudent' && $('#nidInput')) { const raw = $('#nidInput').value.trim(), nid = cleanNid(raw); if (raw && !nid) return toast('رقم السجل المدني غير صحيح'); o.nid = nid; } await db.put(kind === 'renameClass' ? 'classes' : 'students', o); closeModal(); render();
     } else if (f.id === 'bulkForm') {
-      const cid = topId(), have = new Set(stuOf(cid).map(s => norm(s.name))), names = bulkNames().filter(n => !have.has(norm(n)));
-      if (!names.length) return toast('لا توجد أسماء جديدة للإضافة');
-      for (const name of names) { const s = {id:'s' + uid(), classId:cid, name}; await db.put('students', s); S.students.push(s); }
-      closeModal(); render(); toast('أُضيفت ' + names.length + ' طالبة');
+      const cid = topId(), have = new Map(stuOf(cid).map(s => [norm(s.name), s])); let added = 0, upd = 0;
+      for (const r of bulkEntries()) {
+        const ex = have.get(norm(r.name));
+        if (ex) { if (r.nid && ex.nid !== r.nid) { ex.nid = r.nid; await db.put('students', ex); upd++; } continue; }
+        const s = {id:'s' + uid(), classId:cid, name:r.name, nid:r.nid || ''}; await db.put('students', s); S.students.push(s); have.set(norm(r.name), s); added++;
+      }
+      if (!added && !upd) return toast('لا توجد أسماء جديدة للإضافة');
+      closeModal(); render(); toast((added ? 'أُضيفت ' + added + ' طالبة' : '') + (added && upd ? ' · ' : '') + (upd ? 'حُدّث السجل المدني لـ ' + upd : ''));
     } else if (f.id === 'exForm') {
       const date = $('#exDate').value, to = $('#exTo').value || date; if (!date) return toast('اختاري تاريخ العذر');
       if (to < date) return toast('تاريخ النهاية قبل تاريخ البداية');
