@@ -111,6 +111,25 @@ svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke
 .kv{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
 .kv:last-child{border-bottom:0}
 .kv span:first-child{color:var(--muted)}
+.count.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.photos{display:flex;flex-wrap:wrap;gap:10px;align-items:center;min-height:40px}
+.ph{position:relative;display:block}
+.ph-x{position:absolute;top:-8px;inset-inline-start:-8px;width:28px;height:28px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);display:grid;place-items:center;cursor:pointer;padding:0}
+.ph-x svg{width:16px;height:16px}
+.more{font-size:.8rem;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 8px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--display);font-size:1.6rem;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.3}
+.stat span{font-size:.85rem;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chipbtn{min-height:38px;padding:4px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:.9rem}
+.chipbtn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.meters{display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.meter{display:grid;grid-template-columns:7.5em minmax(0,1fr) 2.5em;gap:10px;align-items:center;font-size:.92rem}
+.meter-track{display:block;height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.meter-fill{display:block;height:100%;border-radius:99px}
+.meter .num{text-align:left;font-variant-numeric:tabular-nums;color:var(--muted)}
+.gallery{display:flex;flex-direction:column;gap:10px}
 @media (prefers-reduced-motion:no-preference){ .sheet{animation:up .18s ease-out} @keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}} }
 </style>
 </head>
@@ -151,8 +170,27 @@ const IC = {
   img:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/></svg>',
   file:'<svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>',
   pdf:'<svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>',
-  x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+  x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  chart:'<svg viewBox="0 0 24 24"><path d="M5 20V11M11 20V5M17 20v-7M3 20h18"/></svg>',
+  share:'<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>',
+  move:'<svg viewBox="0 0 24 24"><path d="M4 12h14M13 7l5 5-5 5"/></svg>'
 };
+/* أيام الدوام بين تاريخين (بدون الجمعة والسبت) */
+const pad2 = n => String(n).padStart(2, '0');
+const isoOf = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+function schoolDays(a, b) {
+  const s = new Date(a + 'T12:00:00'), e = new Date((b || a) + 'T12:00:00');
+  if (isNaN(s) || isNaN(e) || e < s) return 1;
+  let n = 0; for (let d = new Date(s), i = 0; d <= e && i < 400; d.setDate(d.getDate() + 1), i++) { const w = d.getDay(); if (w !== 5 && w !== 6) n++; }
+  return Math.max(1, n);
+}
+const endOf = e => e.dateTo && e.dateTo > e.date ? e.dateTo : e.date;
+const daysOf = e => Math.max(1, parseInt(e.days, 10) || 1);
+const dayWord = n => n === 1 ? 'يوم واحد' : n === 2 ? 'يومان' : n <= 10 ? n + ' أيام' : n + ' يوماً';
+const photosOf = e => Array.isArray(e.photos) ? e.photos : (e.hasImage ? [{id:e.id, thumb:e.thumb}] : []);
+const safeName = t => String(t).replace(/[\\/:*?"<>|]/g, '-');
+const canShare = files => { try { return !!(navigator.share && navigator.canShare && navigator.canShare({files})); } catch (e) { return false; } };
+function dataUrlToFile(d, name) { const b = atob(d.split(',')[1] || ''), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return new File([u], name, {type:'image/jpeg'}); }
 
 /* ---------- التخزين: IndexedDB داخل الجهاز، مع بديل مؤقت في الذاكرة ---------- */
 const STORES = ['meta','classes','students','excuses','images'];
@@ -209,17 +247,22 @@ async function migratePlain() {
 }
 
 /* ---------- الحالة ---------- */
-const S = {classes:[], students:[], excuses:[], demo:false, school:{}};
+const S = {classes:[], students:[], excuses:[], demo:false, school:{}, prefs:{}, lastBackup:0};
 let nav = [{v:'home'}], q = '', qd = '', unlocked = false;
 const cls = id => S.classes.find(c => c.id === id);
 const stu = id => S.students.find(s => s.id === id);
 const stuOf = cid => S.students.filter(s => s.classId === cid).sort((a, b) => a.name.localeCompare(b.name, 'ar'));
 const exOf = sid => S.excuses.filter(e => e.studentId === sid).sort((a, b) => b.date.localeCompare(a.date));
+const totalDays = sid => exOf(sid).reduce((a, e) => a + daysOf(e), 0);
+const alertDays = () => Math.max(1, parseInt(S.prefs.alertDays, 10) || 5);
+const lockMin = () => S.prefs.autoLock == null ? 5 : Number(S.prefs.autoLock);
 async function loadAll() {
   [S.classes, S.students, S.excuses] = await Promise.all([db.all('classes'), db.all('students'), db.all('excuses')]);
   S.classes.sort((a, b) => a.created - b.created);
   const m = await db.get('meta', 'seed'); S.demo = !!(m && m.demo);
   S.school = (await raw.get('meta', 'school')) || {};
+  S.prefs = (await raw.get('meta', 'prefs')) || {};
+  const lb = await raw.get('meta', 'lastBackup'); S.lastBackup = lb ? lb.t : 0;
 }
 
 /* ---------- أدوات الواجهة ---------- */
@@ -229,7 +272,7 @@ function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = fal
 const HIST = true; let guard = false;
 function armBack() { if (!HIST || guard) return; try { history.pushState({app:1}, ''); guard = true; } catch (e) {} }
 function openModal(html) { armBack(); const m = $('#modal'); m.innerHTML = '<div class="sheet" role="dialog" aria-modal="true">' + html + '</div>'; m.hidden = false; }
-function closeModal() { $('#modal').hidden = true; $('#modal').innerHTML = ''; pending = null; }
+function closeModal() { $('#modal').hidden = true; $('#modal').innerHTML = ''; fp = null; }
 const sheetHead = t => `<div class="sheet-head"><h2>${esc(t)}</h2><button class="icon-btn" data-act="close" aria-label="إغلاق">${IC.x}</button></div>`;
 let confirmCb = null;
 function confirmBox(title, msg, okLabel, cb) {
@@ -307,18 +350,19 @@ function demoImage(line1, line2) {
 async function seedDemo() {
   const names = ['أول ثانوي / 1', 'ثاني ثانوي / 2', 'ثالث ثانوي / 1'];
   const first = ['سارة','نورة','ريم','لمى','جود','دانة','هيا','غلا','شهد','رغد','ليان','تالا'], mid = ['أحمد','خالد','سعد','فهد','ماجد','ناصر'], last = ['التجريبي','النموذجي','المثالي','الافتراضي'];
-  const plan = {'0-0':[['medical',2,'تقرير طبي — غياب يومين'],['appt',16,'موعد عيادة أسنان']], '0-3':[['family',5,'ظرف عائلي طارئ']], '1-2':[['travel',9,'سفر مع الأسرة'],['medical',1,'إجازة مرضية يوم واحد']], '2-0':[['other',3,'تأخر صباحي بعذر']], '2-5':[['appt',0,'مراجعة مستشفى']]};
+  const plan = {'0-0':[['medical',4,'تقرير طبي — غياب يومين',2],['appt',16,'موعد عيادة أسنان']], '0-3':[['family',5,'ظرف عائلي طارئ']], '1-2':[['travel',9,'سفر مع الأسرة'],['medical',1,'إجازة مرضية يوم واحد']], '2-0':[['other',3,'تأخر صباحي بعذر']], '2-5':[['appt',0,'مراجعة مستشفى']]};
   const base = Date.now();
   for (let c = 0; c < names.length; c++) {
     const cid = 'c' + uid(); await db.put('classes', {id:cid, name:names[c], created:base + c});
     for (let i = 0; i < 8; i++) {
       const sid = 's' + uid() + i, name = first[(c * 4 + i) % 12] + ' ' + mid[(i + c) % 6] + ' ' + last[(i + 2 * c) % 4];
       await db.put('students', {id:sid, classId:cid, name});
-      for (const [cat, ago, note] of (plan[c + '-' + i] || [])) {
+      for (const [cat, ago, note, span] of (plan[c + '-' + i] || [])) {
         const d = new Date(); d.setDate(d.getDate() - ago); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
         const eid = 'e' + uid(), im = demoImage('الطالبة: ' + name, 'النوع: ' + catName(cat));
         await db.put('images', {id:eid, data:im.full});
-        await db.put('excuses', {id:eid, studentId:sid, date:d.toISOString().slice(0, 10), category:cat, notes:note + ' (وهمي)', thumb:im.thumb, hasImage:true, created:Date.now()});
+        const from = d.toISOString().slice(0, 10), t = new Date(from + 'T12:00:00'); t.setDate(t.getDate() + ((span || 1) - 1)); const to = isoOf(t);
+        await db.put('excuses', {id:eid, studentId:sid, date:from, dateTo:to, days:schoolDays(from, to), category:cat, notes:note + ' (وهمي)', thumb:im.thumb, hasImage:true, created:Date.now()});
       }
     }
   }
@@ -335,7 +379,7 @@ function render() {
   if (!unlocked) return;
   const top = nav[nav.length - 1];
   $('#backBtn').hidden = nav.length < 2;
-  ({home:vHome, cls:vClass, stu:vStudent, settings:vSettings}[top.v])(top);
+  ({home:vHome, cls:vClass, stu:vStudent, settings:vSettings, report:vReport}[top.v])(top);
 }
 function vHome() {
   $('#barTitle').textContent = 'سجل أعذار الطالبات';
@@ -355,28 +399,31 @@ function studentItem(s, withClass) {
   return `<button class="item" data-act="openStudent" data-id="${s.id}"><span class="txt"><span class="name">${esc(s.name)}</span>${withClass ? `<span class="sub">${esc(c ? c.name : '')}</span>` : ''}</span><span class="count ${n ? 'has' : ''}">${n} عذر</span>${IC.chev}</button>`;
 }
 function folderTile(s) {
-  const n = exOf(s.id).length;
-  return `<button class="tile ${n ? 'has' : ''}" data-act="openStudent" data-id="${s.id}"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="name">${esc(s.name)}</span><span class="count ${n ? 'has' : ''}">${n} عذر</span></button>`;
+  const n = exOf(s.id).length, d = totalDays(s.id), w = n && d >= alertDays();
+  return `<button class="tile ${n ? 'has' : ''}" data-act="openStudent" data-id="${s.id}"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="name">${esc(s.name)}</span><span class="count ${w ? 'warn' : n ? 'has' : ''}">${n ? n + ' عذر · ' + d + ' يوم' : '0 عذر'}</span></button>`;
 }
 function excuseItem(e, withStudent) {
-  const s = stu(e.studentId), c = s && cls(s.classId);
+  const s = stu(e.studentId), c = s && cls(s.classId), end = endOf(e), ph = photosOf(e);
   const th = e.thumb ? `<img class="thumb" src="${e.thumb}" alt="صورة العذر">` : `<span class="thumb">${IC.file}</span>`;
   return `<button class="item excuse" data-act="viewExcuse" data-id="${e.id}">${th}<span class="txt">
     ${withStudent && s ? `<span class="name">${esc(s.name)}</span><span class="sub">${esc(c ? c.name : '')}</span>` : ''}
     <span class="chip" style="--cc:var(--c-${esc(e.category)})">${esc(catName(e.category))}</span>
-    <span class="dates">${esc(hijri(e.date))} <span class="sub">(${esc(e.date)})</span></span>
+    <span class="dates">${esc(hijri(e.date))}${end !== e.date ? ' إلى ' + esc(hijri(end)) : ''}</span>
+    <span class="sub dates">${esc(e.date)}${end !== e.date ? ' إلى ' + esc(end) : ''} · ${dayWord(daysOf(e))}${ph.length > 1 ? ' · ' + ph.length + ' صور' : ''}</span>
     ${e.notes ? `<span class="note">${esc(e.notes)}</span>` : ''}</span></button>`;
 }
 function searchExcuses() {
   const n = norm(q);
-  return S.excuses.filter(e => e.date === qd).filter(e => { if (!n) return true; const s = stu(e.studentId), c = s && cls(s.classId); return (s && norm(s.name).includes(n)) || (c && norm(c.name).includes(n)); });
+  return S.excuses.filter(e => e.date <= qd && endOf(e) >= qd).filter(e => { if (!n) return true; const s = stu(e.studentId), c = s && cls(s.classId); return (s && norm(s.name).includes(n)) || (c && norm(c.name).includes(n)); });
 }
 function homeList() {
   const box = $('#homeList'); if (!box) return; const n = norm(q); let h = '';
   if (!n && !qd) {
     if (S.demo) h += `<div class="notice"><span>تعملين الآن على بيانات وهمية للتجربة. جرّبي كل شيء بحرية، ثم امسحيها قبل إدخال بيانات حقيقية.</span><button class="btn small" data-act="askWipeDemo">مسح البيانات الوهمية</button></div>`;
     if (!S.school.school) h += `<button class="btn small" data-act="settings">إضافة اسم المدرسة ليظهر في المطبوعات</button>`;
-    if (S.students.length) h += `<button class="btn primary" data-act="quickExcuse">${IC.plus} تسجيل عذر جديد</button>`;
+    const lb = S.lastBackup;
+    if (!S.demo && S.excuses.length && (!lb || Date.now() - lb > 7 * 864e5)) h += `<div class="notice"><span>${lb ? 'مرّ أكثر من أسبوع على آخر نسخة احتياطية.' : 'لم تُحفظ أي نسخة احتياطية بعد.'} احفظي نسخة الآن حتى لا تضيع البيانات إن تغيّر الجوال.</span><button class="btn small" data-act="backup">حفظ نسخة احتياطية</button></div>`;
+    if (S.students.length) h += `<div class="actions"><button class="btn primary grow" data-act="quickExcuse">${IC.plus} تسجيل عذر جديد</button><button class="btn grow" data-act="openReport">${IC.chart} التقارير والإحصائيات</button></div>`;
     h += `<div class="sec-title"><h2>الفصول</h2><button class="btn primary small" data-act="addClass">${IC.plus} فصل جديد</button></div>`;
     h += S.classes.length ? `<div class="list">${S.classes.map(classItem).join('')}</div>` : `<div class="empty">لا توجد فصول بعد. ابدئي بإضافة فصل، ثم أضيفي طالباته دفعة واحدة.</div>`;
   } else if (qd) {
@@ -406,11 +453,55 @@ function vClass(top) {
 }
 function vStudent(top) {
   const s = stu(top.id); if (!s) return back();
-  const c = cls(s.classId), ex = exOf(s.id); $('#barTitle').textContent = s.name;
-  $('#view').innerHTML = `<div class="head"><h2>${esc(s.name)}</h2><p class="sub">${esc(c ? c.name : '')} · ${ex.length} عذر محفوظ</p></div>
-    <div class="actions"><button class="btn primary grow" data-act="newExcuse">${IC.plus} عذر جديد</button>${ex.length ? `<button class="btn grow" data-act="pdfStudent">${IC.pdf} طباعة ملف الطالبة (PDF)</button>` : ''}</div>
+  const c = cls(s.classId), ex = exOf(s.id), d = totalDays(s.id), al = alertDays(); $('#barTitle').textContent = s.name;
+  $('#view').innerHTML = `<div class="head"><h2>${esc(s.name)}</h2><p class="sub">${esc(c ? c.name : '')} · ${ex.length} عذر · ${dayWord(d)} غياب</p></div>
+    ${ex.length && d >= al ? `<div class="notice">تجاوزت الطالبة حد التنبيه: ${dayWord(d)} غياب بعذر (الحد ${al}).</div>` : ''}
+    <div class="actions"><button class="btn primary grow" data-act="newExcuse">${IC.plus} عذر جديد</button>${ex.length ? `<button class="btn grow" data-act="pdfStudent">${IC.pdf} طباعة أو مشاركة الملف (PDF)</button>` : ''}</div>
     ${ex.length ? `<div class="list">${ex.map(e => excuseItem(e)).join('')}</div>` : `<div class="empty">لا توجد أعذار محفوظة لهذه الطالبة.</div>`}
-    <div class="actions"><button class="btn small" data-act="renameStudent">تعديل الاسم</button><button class="btn small danger" data-act="askDelStudent">حذف الطالبة</button></div>`;
+    <div class="actions"><button class="btn small" data-act="renameStudent">تعديل الاسم</button><button class="btn small" data-act="moveStudent">${IC.move} نقل لفصل آخر</button><button class="btn small danger" data-act="askDelStudent">حذف الطالبة</button></div>`;
+}
+/* ---------- التقارير ---------- */
+let rp = null;
+function rpPreset(k) {
+  const t = todayISO(), d = new Date(t + 'T12:00:00');
+  if (k === 'week') { d.setDate(d.getDate() - d.getDay()); return {k, from:isoOf(d), to:t}; }
+  if (k === 'month') return {k, from:t.slice(0, 8) + '01', to:t};
+  if (k === '30') { d.setDate(d.getDate() - 29); return {k, from:isoOf(d), to:t}; }
+  return {k:'all', from:'', to:''};
+}
+const rpLabel = () => rp.from || rp.to ? 'من ' + (rp.from ? hijri(rp.from) : 'البداية') + ' إلى ' + (rp.to ? hijri(rp.to) : 'اليوم') : 'كل الأعذار المسجلة';
+function rpData() {
+  const list = S.excuses.filter(e => (!rp.from || e.date >= rp.from) && (!rp.to || e.date <= rp.to));
+  const by = new Map(); list.forEach(e => { const o = by.get(e.studentId) || {n:0, d:0}; o.n++; o.d += daysOf(e); by.set(e.studentId, o); });
+  const cats = CATS.map(([k, l]) => ({k, l, n:0, d:0})); list.forEach(e => { const c = cats.find(c => c.k === e.category) || cats[5]; c.n++; c.d += daysOf(e); });
+  const classes = S.classes.map(c => { const ids = new Set(stuOf(c.id).map(s => s.id)), l = list.filter(e => ids.has(e.studentId)); return {c, n:l.length, d:l.reduce((a, e) => a + daysOf(e), 0)}; });
+  const students = [...by.entries()].map(([id, o]) => ({s:stu(id), n:o.n, d:o.d})).filter(r => r.s).sort((a, b) => b.d - a.d || b.n - a.n || a.s.name.localeCompare(b.s.name, 'ar'));
+  return {list, total:list.length, days:list.reduce((a, e) => a + daysOf(e), 0), cats, classes, students};
+}
+const rpStu = r => { const c = cls(r.s.classId), w = r.d >= alertDays(); return `<button class="item" data-act="openStudent" data-id="${r.s.id}"><span class="txt"><span class="name">${esc(r.s.name)}</span><span class="sub">${esc(c ? c.name : '')} · ${r.n} عذر</span></span><span class="count ${w ? 'warn' : 'has'}">${r.d} يوم</span>${IC.chev}</button>`; };
+function vReport() {
+  if (!rp) rp = rpPreset('month');
+  $('#barTitle').textContent = 'التقارير';
+  const P = [['week','هذا الأسبوع'],['month','هذا الشهر'],['30','آخر 30 يوماً'],['all','الكل']];
+  $('#view').innerHTML = `<div class="head"><h2>التقارير والإحصائيات</h2><p class="sub" id="rpLabel"></p></div>
+    <div class="chips" id="rpChips">${P.map(([k, l]) => `<button class="chipbtn" data-act="rpPreset" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="daterow"><label class="field">من تاريخ<input id="rpFrom" type="date" value="${esc(rp.from)}"></label><label class="field">إلى تاريخ<input id="rpTo" type="date" value="${esc(rp.to)}"></label></div>
+    <div id="rpBody" style="display:flex;flex-direction:column;gap:16px"></div>`;
+  rpBody();
+}
+function rpBody() {
+  const b = $('#rpBody'); if (!b) return;
+  $('#rpLabel').textContent = rpLabel();
+  document.querySelectorAll('#rpChips .chipbtn').forEach(x => x.classList.toggle('on', x.dataset.k === rp.k));
+  const D = rpData(), al = alertDays();
+  if (!D.total) { b.innerHTML = '<div class="empty">لا توجد أعذار مسجلة في هذه الفترة.</div>'; return; }
+  const maxC = Math.max(1, ...D.cats.map(c => c.n)), over = D.students.filter(r => r.d >= al);
+  b.innerHTML = `<div class="stats"><div class="stat"><b>${D.total}</b><span>عذر</span></div><div class="stat"><b>${D.days}</b><span>يوم غياب</span></div><div class="stat"><b>${D.students.length}</b><span>طالبة</span></div></div>
+    <button class="btn primary" data-act="pdfReport">${IC.pdf} تقرير PDF للطباعة أو المشاركة</button>
+    ${over.length ? `<div class="sec-title"><h2>تجاوزن حد التنبيه</h2><span class="count warn">${al} أيام فأكثر</span></div><div class="list">${over.map(rpStu).join('')}</div>` : ''}
+    <h2>حسب التصنيف</h2><div class="meters">${D.cats.filter(c => c.n).map(c => `<div class="meter"><span>${esc(c.l)}</span><span class="meter-track"><span class="meter-fill" style="width:${Math.round(c.n / maxC * 100)}%;background:var(--c-${c.k})"></span></span><span class="num">${c.n}</span></div>`).join('')}</div>
+    <h2>حسب الفصل</h2><div class="list">${D.classes.map(r => `<button class="item" data-act="openClass" data-id="${r.c.id}"><span class="txt"><span class="name">${esc(r.c.name)}</span><span class="sub">${dayWord(r.d)} غياب</span></span><span class="count ${r.n ? 'has' : ''}">${r.n} عذر</span>${IC.chev}</button>`).join('')}</div>
+    <h2>الأكثر غياباً</h2><div class="list">${D.students.slice(0, 10).map(rpStu).join('')}</div>`;
 }
 async function vSettings() {
   $('#barTitle').textContent = 'الإعدادات والنسخ الاحتياطي';
@@ -425,14 +516,19 @@ async function vSettings() {
     <label class="field">اسم الإدارية المسؤولة<input id="scAdmin" maxlength="80" autocomplete="off" value="${esc(sc.admin || '')}"></label>
     <label class="field">اسم مديرة المدرسة<input id="scPrincipal" maxlength="80" autocomplete="off" value="${esc(sc.principal || '')}"></label>
     <button class="btn primary" type="submit">حفظ بيانات المدرسة</button></form>
+    <h2>التنبيه والقفل التلقائي</h2>
+    <form id="prefsForm" style="display:flex;flex-direction:column;gap:12px">
+    <label class="field">نبّهيني إذا وصلت أيام غياب الطالبة بعذر إلى<input id="pfAlert" type="number" min="1" max="99" inputmode="numeric" value="${alertDays()}"></label>
+    <label class="field">قفل التطبيق تلقائياً بعد تركه<select id="pfLock">${[[1,'دقيقة واحدة'],[5,'5 دقائق'],[15,'15 دقيقة'],[0,'بدون قفل تلقائي']].map(([v, l]) => `<option value="${v}" ${lockMin() === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    <button class="btn primary" type="submit">حفظ</button></form>
     <h2>النسخ الاحتياطي</h2>
     <p class="sub">النسخة ملف واحد مشفّر يحوي الفصول والطالبات والأعذار والصور، ويُفتح برمز الدخول المستخدم وقت حفظه. احفظيه خارج الجوال أيضاً.</p>
-    <div class="actions"><button class="btn primary grow" data-act="backup">${IC.pdf} حفظ نسخة احتياطية</button>
+    <div class="actions"><button class="btn primary grow" data-act="backup">${IC.pdf} حفظ أو مشاركة نسخة احتياطية</button>
     <label class="btn grow"><input class="vh" id="restoreFile" type="file" accept=".json,application/json">${IC.file} استعادة من ملف</label></div>
     <h2>حالة التخزين</h2>
     <div class="list"><div class="kv"><span>مكان الحفظ</span><span>${idb ? 'داخل هذا الجهاز فقط' : 'مؤقت — يزول عند الإغلاق'}</span></div>
     <div class="kv"><span>الفصول</span><span>${S.classes.length}</span></div><div class="kv"><span>الطالبات</span><span>${S.students.length}</span></div>
-    <div class="kv"><span>الأعذار</span><span>${S.excuses.length}</span></div>${used ? `<div class="kv"><span>المساحة المستخدمة</span><span>${used}</span></div>` : ''}</div>
+    <div class="kv"><span>الأعذار</span><span>${S.excuses.length}</span></div><div class="kv"><span>آخر نسخة احتياطية</span><span>${S.lastBackup ? esc(hijri(isoOf(new Date(S.lastBackup)))) : 'لم تُحفظ بعد'}</span></div>${used ? `<div class="kv"><span>المساحة المستخدمة</span><span>${used}</span></div>` : ''}</div>
     ${idb ? '' : '<div class="notice">هذا المتصفح منع التخزين الدائم (قد يكون وضع التصفح الخفي). البيانات ستزول عند إغلاق الصفحة.</div>'}
     <h2>الحماية</h2>
     <p class="sub">الأسماء والأعذار والصور مشفّرة على هذا الجهاز، ومفتاحها رمز الدخول. إن نُسي الرمز فلا يمكن استرجاع البيانات ولا فتح النسخ الاحتياطية.</p>
@@ -479,27 +575,41 @@ async function readNamesFile(file) {
   if (text.includes(String.fromCharCode(65533))) { try { text = new TextDecoder('windows-1256').decode(buf); } catch (e) {} }
   return namesFromRows(text.split(/\r?\n/).map(l => l.split(/[,;\t]/)));
 }
-let pending = null; // {full, thumb} صورة العذر قيد الإدخال، أو 'remove'
+let fp = null; // صور العذر قيد الإدخال: {list:[{id?, thumb, full?}], removed:[ids]}
+const MAXPH = 6;
 function excuseForm(e) {
-  const s = stu(nav[nav.length - 1].id);
+  const s = stu(nav[nav.length - 1].id), from = e ? e.date : todayISO(), to = e ? endOf(e) : from;
   openModal(sheetHead(e ? 'تعديل العذر' : 'عذر جديد') + `<form id="exForm" data-id="${e ? e.id : ''}">
     <p class="sub">${esc(s ? s.name : '')}</p>
-    <label class="field">تاريخ العذر<input id="exDate" type="date" value="${esc(e ? e.date : todayISO())}" required></label>
+    <div class="daterow"><label class="field">من تاريخ<input id="exDate" type="date" value="${esc(from)}" required></label><label class="field">إلى تاريخ<input id="exTo" type="date" value="${esc(to)}"></label></div>
+    <label class="field">عدد أيام الغياب<input id="exDays" type="number" min="1" max="200" inputmode="numeric" value="${e ? daysOf(e) : schoolDays(from, to)}"><span class="sub">تُحسب أيام الدوام تلقائياً بدون الجمعة والسبت، ويمكنك تعديلها.</span></label>
     <label class="field">التصنيف<select id="exCat">${CATS.map(c => `<option value="${c[0]}" ${e && e.category === c[0] ? 'selected' : ''}>${c[1]}</option>`).join('')}</select></label>
-    <label class="field">ملاحظات<textarea id="exNotes" maxlength="500" placeholder="مثال: غياب يومين بتقرير طبي">${esc(e ? e.notes : '')}</textarea></label>
-    <div class="prev" id="exPrev">${e && e.thumb ? `<img class="thumb" src="${e.thumb}" alt=""><span class="sub">الصورة الحالية محفوظة</span>` : '<span class="sub">لم تُرفق صورة بعد</span>'}</div>
+    <label class="field">ملاحظات<textarea id="exNotes" maxlength="500" placeholder="مثال: تقرير طبي من مستشفى الملك فهد">${esc(e ? e.notes : '')}</textarea></label>
+    <div class="field">صور العذر (حتى ${MAXPH} صور)<div class="photos" id="exPhotos"></div><span class="sub" id="exPhStatus"></span></div>
     <div class="actions"><label class="btn grow"><input class="vh" id="exCam" type="file" accept="image/*" capture="environment">${IC.cam} تصوير بالكاميرا</label>
-    <label class="btn grow"><input class="vh" id="exGal" type="file" accept="image/*">${IC.img} من المعرض</label></div>
+    <label class="btn grow"><input class="vh" id="exGal" type="file" accept="image/*" multiple>${IC.img} من المعرض</label></div>
     <button class="btn primary" type="submit" id="exSave">حفظ العذر</button></form>`);
+  fp = {list:(e ? photosOf(e) : []).map(p => ({id:p.id, thumb:p.thumb})), removed:[]};
+  renderFormPhotos();
 }
+function renderFormPhotos() {
+  const b = $('#exPhotos'); if (!b || !fp) return;
+  b.innerHTML = fp.list.length ? fp.list.map((p, i) => `<span class="ph"><img class="thumb" src="${p.thumb}" alt="صورة ${i + 1}"><button type="button" class="ph-x" data-act="rmPhoto" data-i="${i}" aria-label="إزالة الصورة ${i + 1}">${IC.x}</button></span>`).join('') : '<span class="sub">لم تُرفق صورة بعد</span>';
+}
+let shareFiles = [], shareText = '';
 async function viewExcuse(id) {
   const e = S.excuses.find(x => x.id === id); if (!e) return;
-  const s = stu(e.studentId), c = s && cls(s.classId);
+  const s = stu(e.studentId), c = s && cls(s.classId), end = endOf(e), ph = photosOf(e);
   if (nav[nav.length - 1].v !== 'stu' && s) { nav.push({v:'stu', id:s.id}); render(); }
-  let img = ''; if (e.hasImage) { try { const r = await db.get('images', id); if (r) img = `<img class="full-img" src="${r.data}" alt="صورة العذر">`; } catch (x) {} }
+  let imgs = ''; shareFiles = [];
+  for (let i = 0; i < ph.length; i++) {
+    try { const r = await db.get('images', ph[i].id); if (r && r.data) { imgs += `<img class="full-img" src="${r.data}" alt="صورة العذر ${i + 1}">`; shareFiles.push(dataUrlToFile(r.data, safeName('عذر ' + (s ? s.name : '') + ' ' + e.date + (ph.length > 1 ? ' (' + (i + 1) + ')' : '')) + '.jpg')); } } catch (x) {}
+  }
+  shareText = [(s ? s.name : ''), (c ? c.name : ''), 'عذر: ' + catName(e.category), 'التاريخ: ' + hijri(e.date) + (end !== e.date ? ' إلى ' + hijri(end) : ''), 'أيام الغياب: ' + daysOf(e), e.notes].filter(Boolean).join('\n');
   openModal(sheetHead(catName(e.category)) + `<div class="head"><p>${esc(s ? s.name : '')} <span class="sub">· ${esc(c ? c.name : '')}</span></p>
-    <p class="dates">${esc(hijri(e.date))} <span class="sub">(${esc(e.date)})</span></p>${e.notes ? `<p class="note">${esc(e.notes)}</p>` : ''}</div>
-    ${img || '<div class="empty">لا توجد صورة مرفقة بهذا العذر.</div>'}
+    <p class="dates">${esc(hijri(e.date))}${end !== e.date ? ' إلى ' + esc(hijri(end)) : ''}</p><p class="sub dates">${esc(e.date)}${end !== e.date ? ' إلى ' + esc(end) : ''} · ${dayWord(daysOf(e))}</p>${e.notes ? `<p class="note">${esc(e.notes)}</p>` : ''}</div>
+    ${imgs ? `<div class="gallery">${imgs}</div>` : '<div class="empty">لا توجد صورة مرفقة بهذا العذر.</div>'}
+    ${shareFiles.length && canShare(shareFiles) ? `<button class="btn primary" data-act="shareExcuse">${IC.share} مشاركة العذر (واتساب وغيره)</button>` : ''}
     <div class="actions"><button class="btn grow" data-act="editExcuse" data-id="${id}">تعديل</button><button class="btn danger grow" data-act="askDelExcuse" data-id="${id}">حذف العذر</button></div>`);
 }
 
@@ -539,66 +649,121 @@ function buildPDF(pages, w, h) {
   push(x + 'trailer\n<< /Size ' + total + ' /Root 1 0 R >>\nstartxref\n' + xpos + '\n%%EOF\n');
   return new Blob(parts, {type:'application/pdf'});
 }
-async function exportPDF(title, sub, list, withStudent) {
-  if (!list.length) return toast('لا توجد أعذار للتصدير');
-  toast('جارٍ تجهيز الملف…');
+let lastFile = null;
+function fileReady(name, blob, kind) {
+  lastFile = {file:new File([blob], name, {type:blob.type || 'application/octet-stream'}), kind:kind || ''};
+  const sh = canShare([lastFile.file]);
+  openModal(sheetHead('الملف جاهز') + `<p class="sub">${esc(name)}</p><div class="actions"><button class="btn primary grow" data-act="saveLast">${IC.pdf} حفظ في الجوال</button>${sh ? `<button class="btn grow" data-act="shareLast">${IC.share} مشاركة (واتساب وغيره)</button>` : ''}</div>${kind === 'backup' ? '<p class="sub">أفضل مكان للنسخة: أرسليها لنفسك في واتساب أو احفظيها في Google Drive، حتى تبقى إن ضاع الجوال.</p>' : ''}`);
+}
+function doShare(files, text) {
+  return navigator.share(text ? {files, text} : {files}).then(() => true).catch(err => { if (!(err && err.name === 'AbortError')) toast('تعذرت المشاركة من هنا. احفظي الملف ثم أرسليه.'); return false; });
+}
+async function markBackup() { S.lastBackup = Date.now(); try { await raw.put('meta', {id:'lastBackup', t:S.lastBackup}); } catch (e) {} }
+async function makeDoc(title, sub) {
   const HF = '"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif', BF = '"IBM Plex Sans Arabic",Tahoma,sans-serif';
   try { await Promise.all([document.fonts.load('600 30px "Readex Pro"', 'س'), document.fonts.load('400 24px "IBM Plex Sans Arabic"', 'س'), document.fonts.load('600 24px "IBM Plex Sans Arabic"', 'س')]); } catch (e) {}
   const W = 1240, H = 1754, M = 90, R = W - M, INK = '#1C2B2E', MUT = '#5A6C6E', LINE = '#C9D3D1';
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d', {willReadFrequently:true});
-  const pages = []; let pageNo = 0;
-  const start = () => { x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); x.direction = 'rtl'; x.textAlign = 'right'; x.textBaseline = 'alphabetic'; pageNo++; };
-  const flush = async () => {
-    x.textAlign = 'center'; x.fillStyle = MUT; x.font = '20px ' + BF; x.fillText('صفحة ' + pageNo + '  ·  سجل أعذار الطالبات  ·  ' + todayISO(), W / 2, H - 50); x.textAlign = 'right';
-    const blob = await new Promise(res => cv.toBlob(res, 'image/jpeg', .88)); if (!blob) throw new Error('page');
-    pages.push(new Uint8Array(await blob.arrayBuffer()));
-  };
   const sc = S.school || {}, so = sc.school ? 48 : 0;
-  const header = () => { if (so) { x.fillStyle = INK; x.font = '600 28px ' + HF; x.fillText(fit(x, sc.school, W - 2 * M), R, M + 14); } x.fillStyle = INK; x.font = '600 40px ' + HF; x.fillText(fit(x, title, W - 2 * M), R, M + 30 + so); x.fillStyle = MUT; x.font = '24px ' + BF; x.fillText(fit(x, sub, W - 2 * M), R, M + 76 + so); x.strokeStyle = INK; x.lineWidth = 2; x.beginPath(); x.moveTo(M, M + 100 + so); x.lineTo(R, M + 100 + so); x.stroke(); return M + 100 + so; };
-  // أعمدة الجدول من اليمين: م، [الطالبة]، التاريخ، التصنيف، الملاحظات
-  const cols = withStudent ? [60, 290, 270, 170] : [60, 0, 320, 190]; const notesW = W - 2 * M - cols.reduce((a, b) => a + b, 0) - 20;
-  const xs = [R - 8]; cols.forEach((w, i) => xs.push(xs[i] - w));
-  const tableHead = y => { x.fillStyle = '#FBE3EC'; x.fillRect(M, y, W - 2 * M, 54); x.fillStyle = INK; x.font = '600 22px ' + BF; x.fillText('م', xs[0], y + 35); if (withStudent) x.fillText('الطالبة', xs[1], y + 35); x.fillText('تاريخ العذر', xs[2], y + 35); x.fillText('التصنيف', xs[3], y + 35); x.fillText('ملاحظات', xs[4], y + 35); return y + 54; };
-  start(); let y = tableHead(header() + 24);
-  for (let i = 0; i < list.length; i++) {
-    const e = list[i];
-    if (y + 76 > H - 110) { await flush(); start(); y = tableHead(header() + 24); }
-    const s = stu(e.studentId);
-    x.fillStyle = INK; x.font = '22px ' + BF; x.fillText(String(i + 1), xs[0], y + 34);
-    if (withStudent) { x.font = '600 21px ' + BF; x.fillText(fit(x, s ? s.name : '', cols[1] - 16), xs[1], y + 34); x.font = '18px ' + BF; x.fillStyle = MUT; const c = s && cls(s.classId); x.fillText(fit(x, c ? c.name : '', cols[1] - 16), xs[1], y + 60); x.fillStyle = INK; }
-    x.font = '22px ' + BF; x.fillText(fit(x, hijri(e.date) || e.date, cols[2] - 16), xs[2], y + 34); x.font = '18px ' + BF; x.fillStyle = MUT; x.fillText(e.date, xs[2], y + 60);
-    x.fillStyle = INK; x.font = '22px ' + BF; x.fillText(fit(x, catName(e.category), cols[3] - 16), xs[3], y + 34);
-    x.font = '20px ' + BF; wrapText(x, e.notes || '—', notesW, 2).forEach((l, k) => x.fillText(l, xs[4], y + 32 + k * 28));
-    y += 76; x.strokeStyle = LINE; x.lineWidth = 1; x.beginPath(); x.moveTo(M, y); x.lineTo(R, y); x.stroke();
-  }
-  x.fillStyle = MUT; x.font = '22px ' + BF; if (y + 50 < H - 110) x.fillText('عدد الأعذار: ' + list.length, R, y + 44);
-  if (sc.admin || sc.principal) {
-    if (y + 70 > H - 340) { await flush(); start(); y = header(); }
+  const d = {W, H, M, R, x, INK, MUT, HF, BF, pages:[], pageNo:0};
+  d.start = () => { x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); x.direction = 'rtl'; x.textAlign = 'right'; x.textBaseline = 'alphabetic'; d.pageNo++; };
+  d.flush = async () => {
+    x.textAlign = 'center'; x.fillStyle = MUT; x.font = '20px ' + BF; x.fillText('صفحة ' + d.pageNo + '  ·  سجل أعذار الطالبات  ·  ' + todayISO(), W / 2, H - 50); x.textAlign = 'right';
+    const blob = await new Promise(res => cv.toBlob(res, 'image/jpeg', .88)); if (!blob) throw new Error('page');
+    d.pages.push(new Uint8Array(await blob.arrayBuffer()));
+  };
+  d.header = () => { x.textAlign = 'right'; if (so) { x.fillStyle = INK; x.font = '600 28px ' + HF; x.fillText(fit(x, sc.school, W - 2 * M), R, M + 14); } x.fillStyle = INK; x.font = '600 40px ' + HF; x.fillText(fit(x, title, W - 2 * M), R, M + 30 + so); x.fillStyle = MUT; x.font = '24px ' + BF; x.fillText(fit(x, sub, W - 2 * M), R, M + 76 + so); x.strokeStyle = INK; x.lineWidth = 2; x.beginPath(); x.moveTo(M, M + 100 + so); x.lineTo(R, M + 100 + so); x.stroke(); return M + 100 + so; };
+  d.page = () => { d.start(); return d.header() + 24; };
+  d.room = async (y, h) => { if (y + h > H - 110) { await d.flush(); return d.page(); } return y; };
+  d.section = async (y, t) => { y = await d.room(y, 190); x.textAlign = 'right'; x.fillStyle = INK; x.font = '600 28px ' + HF; x.fillText(t, R, y + 36); return y + 56; };
+  d.table = async (y, heads, widths, rows) => {
+    const xs = [R - 8]; widths.forEach((w, i) => xs.push(xs[i] - w)); const lastW = xs[xs.length - 1] - M - 8, cw = i => i < widths.length ? widths[i] : lastW;
+    const th = yy => { x.textAlign = 'right'; x.fillStyle = '#FBE3EC'; x.fillRect(M, yy, W - 2 * M, 54); x.fillStyle = INK; x.font = '600 22px ' + BF; heads.forEach((h, i) => x.fillText(fit(x, h, cw(i) - 12), xs[i], yy + 35)); return yy + 54; };
+    y = await d.room(y, 54 + 76); y = th(y);
+    for (const row of rows) {
+      const cells = row.map(c => c != null && typeof c === 'object' ? c : {t:String(c == null ? '' : c)}), rh = cells.some(c => c.s || c.wrap) ? 76 : 56;
+      if (y + rh > H - 110) { await d.flush(); y = th(d.page()); }
+      x.textAlign = 'right';
+      cells.forEach((c, i) => {
+        const w = cw(i) - 16; x.fillStyle = c.color || INK; x.font = (c.b ? '600 ' : '') + (c.wrap ? '20px ' : '22px ') + BF;
+        if (c.wrap) wrapText(x, c.t || '—', w, 2).forEach((l, k) => x.fillText(l, xs[i], y + 32 + k * 28)); else x.fillText(fit(x, c.t, w), xs[i], y + 34);
+        if (c.s) { x.fillStyle = MUT; x.font = '18px ' + BF; x.fillText(fit(x, c.s, w), xs[i], y + 60); }
+      });
+      y += rh; x.strokeStyle = LINE; x.lineWidth = 1; x.beginPath(); x.moveTo(M, y); x.lineTo(R, y); x.stroke();
+    }
+    return y;
+  };
+  d.note = async (y, t) => { y = await d.room(y, 60); x.textAlign = 'right'; x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText(t, R, y + 44); return y + 60; };
+  d.sign = async y => {
+    if (!(sc.admin || sc.principal)) return y;
+    if (y + 70 > H - 340) { await d.flush(); y = d.page(); }
     const sy = H - 300, sig = (label, name, px, al) => { if (!name) return; x.textAlign = al; x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText(label, px, sy); x.fillStyle = INK; x.font = '600 26px ' + BF; x.fillText(fit(x, name, 440), px, sy + 42); x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText('التوقيع: ............................', px, sy + 100); };
     sig('الإدارية المسؤولة', sc.admin, R, 'right'); sig('مديرة المدرسة', sc.principal, M, 'left'); x.textAlign = 'right';
-  }
-  await flush();
-  for (const e of list) {
-    if (!e.hasImage) continue;
-    let img; try { const r = await db.get('images', e.id); if (!r) continue; img = await loadImg(r.data); if (img.decode) await img.decode(); } catch (err) { continue; }
-    const s = stu(e.studentId), c = s && cls(s.classId);
-    start(); if (so) { x.textAlign = 'left'; x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText(fit(x, sc.school, 320), M, M + 26); x.textAlign = 'right'; }
+    return y;
+  };
+  d.photoPage = async (img, e, k, n) => {
+    const s = stu(e.studentId), c = s && cls(s.classId), end = endOf(e);
+    d.start(); if (so) { x.textAlign = 'left'; x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText(fit(x, sc.school, 320), M, M + 26); x.textAlign = 'right'; }
     x.fillStyle = INK; x.font = '600 34px ' + HF; x.fillText(fit(x, s ? s.name : '', W - 2 * M - (so ? 340 : 0)), R, M + 26);
-    x.fillStyle = MUT; x.font = '24px ' + BF; x.fillText(fit(x, (c ? c.name + '  ·  ' : '') + catName(e.category) + '  ·  ' + (hijri(e.date) || '') + '  (' + e.date + ')', W - 2 * M), R, M + 70);
-    let ty = M + 112; x.fillStyle = INK; x.font = '22px ' + BF; if (e.notes) wrapText(x, e.notes, W - 2 * M, 3).forEach(l => { x.fillText(l, R, ty); ty += 32; });
+    x.fillStyle = MUT; x.font = '24px ' + BF; x.fillText(fit(x, (c ? c.name + '  ·  ' : '') + catName(e.category) + '  ·  ' + dayWord(daysOf(e)) + (n > 1 ? '  ·  صورة ' + (k + 1) + ' من ' + n : ''), W - 2 * M), R, M + 70);
+    x.fillText(fit(x, (hijri(e.date) || e.date) + (end !== e.date ? ' إلى ' + (hijri(end) || end) : '') + '  (' + e.date + (end !== e.date ? ' إلى ' + end : '') + ')', W - 2 * M), R, M + 108);
+    let ty = M + 150; x.fillStyle = INK; x.font = '22px ' + BF; if (e.notes) wrapText(x, e.notes, W - 2 * M, 3).forEach(l => { x.fillText(l, R, ty); ty += 32; });
     const top = ty + 8, bw = W - 2 * M, bh = H - 110 - top, r = Math.min(bw / img.naturalWidth, bh / img.naturalHeight), iw = img.naturalWidth * r, ih = img.naturalHeight * r, ix = (W - iw) / 2;
     x.drawImage(img, ix, top, iw, ih); x.strokeStyle = LINE; x.lineWidth = 2; x.strokeRect(ix, top, iw, ih);
-    await flush();
+    await d.flush();
+  };
+  d.blob = () => buildPDF(d.pages, W, H);
+  return d;
+}
+async function exportPDF(title, sub, list, withStudent) {
+  if (!list.length) return toast('لا توجد أعذار للتصدير');
+  toast('جارٍ تجهيز الملف…');
+  const d = await makeDoc(title, sub);
+  let y = d.page();
+  const heads = withStudent ? ['م', 'الطالبة', 'تاريخ العذر', 'الأيام', 'التصنيف', 'ملاحظات'] : ['م', 'تاريخ العذر', 'الأيام', 'التصنيف', 'ملاحظات'];
+  const widths = withStudent ? [56, 260, 240, 80, 150] : [56, 300, 100, 190];
+  const rows = list.map((e, i) => {
+    const s = stu(e.studentId), c = s && cls(s.classId), end = endOf(e), r = [String(i + 1)];
+    if (withStudent) r.push({t:s ? s.name : '', s:c ? c.name : '', b:true});
+    r.push({t:hijri(e.date) || e.date, s:end !== e.date ? e.date + ' إلى ' + end : e.date}, String(daysOf(e)), catName(e.category), {t:e.notes || '—', wrap:true});
+    return r;
+  });
+  y = await d.table(y, heads, widths, rows);
+  y = await d.note(y, 'عدد الأعذار: ' + list.length + '   ·   مجموع أيام الغياب: ' + list.reduce((a, e) => a + daysOf(e), 0));
+  await d.sign(y); await d.flush();
+  for (const e of list) {
+    const ph = photosOf(e);
+    for (let k = 0; k < ph.length; k++) {
+      let img; try { const r = await db.get('images', ph[k].id); if (!r) continue; img = await loadImg(r.data); if (img.decode) await img.decode(); } catch (err) { continue; }
+      await d.photoPage(img, e, k, ph.length);
+    }
   }
-  await saveFile(title.replace(/[\\/:*?"<>|]/g, '-') + ' ' + todayISO() + '.pdf', buildPDF(pages, W, H));
+  fileReady(safeName(title) + ' ' + todayISO() + '.pdf', d.blob(), 'pdf');
+}
+async function reportPDF() {
+  const D = rpData(); if (!D.total) return toast('لا توجد أعذار في هذه الفترة');
+  toast('جارٍ تجهيز التقرير…');
+  const d = await makeDoc('تقرير أعذار الطالبات', 'الفترة: ' + rpLabel()), x = d.x, al = alertDays();
+  let y = d.page();
+  const bw = (d.W - 2 * d.M - 40) / 3;
+  [['عدد الأعذار', D.total], ['أيام الغياب', D.days], ['عدد الطالبات', D.students.length]].forEach(([l, v], i) => {
+    const bx = d.R - (i + 1) * bw - i * 20; x.fillStyle = '#FBF1F4'; x.fillRect(bx, y, bw, 124); x.strokeStyle = '#EFD3DC'; x.lineWidth = 2; x.strokeRect(bx, y, bw, 124);
+    x.textAlign = 'center'; x.fillStyle = '#C2376F'; x.font = '600 50px ' + d.HF; x.fillText(String(v), bx + bw / 2, y + 66); x.fillStyle = d.MUT; x.font = '22px ' + d.BF; x.fillText(l, bx + bw / 2, y + 104);
+  });
+  x.textAlign = 'right'; y += 156;
+  y = await d.section(y, 'حسب التصنيف'); y = await d.table(y, ['التصنيف', 'عدد الأعذار', 'أيام الغياب'], [420, 260], D.cats.filter(c => c.n).map(c => [c.l, String(c.n), String(c.d)]));
+  y = await d.section(y + 24, 'حسب الفصل'); y = await d.table(y, ['الفصل', 'عدد الأعذار', 'أيام الغياب'], [420, 260], D.classes.map(r => [r.c.name, String(r.n), String(r.d)]));
+  y = await d.section(y + 24, 'تفصيل الطالبات'); y = await d.table(y, ['م', 'الطالبة', 'الأعذار', 'أيام الغياب', 'ملاحظة'], [56, 420, 120, 160], D.students.map((r, i) => { const c = cls(r.s.classId); return [String(i + 1), {t:r.s.name, s:c ? c.name : '', b:true}, String(r.n), String(r.d), r.d >= al ? {t:'تجاوزت حد التنبيه (' + al + ')', color:'#A8433F', b:true} : '']; }));
+  await d.sign(y); await d.flush();
+  fileReady('تقرير الأعذار ' + todayISO() + '.pdf', d.blob(), 'pdf');
 }
 async function backup() {
   toast('جارٍ تجهيز النسخة…');
   const k = await raw.get('meta', 'key'), pack = r => r && r.ct ? {id:r.id, iv:b64(r.iv), ct:b64(r.ct)} : r;
   const data = {app:'excuses-register', version:2, exportedAt:new Date().toISOString(), key:{salt:b64(k.salt), iv:b64(k.iv), wrapped:b64(k.wrapped), iter:k.iter}};
-  data.school = S.school;
+  data.school = S.school; data.prefs = S.prefs;
   for (const s of ENC) data[s] = (await raw.all(s)).map(pack);
-  await saveFile('نسخة احتياطية - سجل الأعذار ' + todayISO() + '.json', new Blob([JSON.stringify(data)], {type:'application/json'}));
+  fileReady('نسخة احتياطية - سجل الأعذار ' + todayISO() + '.json', new Blob([JSON.stringify(data)], {type:'application/json'}), 'backup');
 }
 let restoreData = null;
 async function readRestore(file) {
@@ -613,6 +778,7 @@ async function readRestore(file) {
       if (v2) {
         for (const s of ENC) for (const v of (r[s] || [])) if (v && v.id) await raw.put(s, v.ct ? {id:v.id, iv:unb64(v.iv), ct:unb64(v.ct)} : v);
         await raw.put('meta', {id:'key', salt:unb64(r.key.salt), iv:unb64(r.key.iv), wrapped:unb64(r.key.wrapped), iter:r.key.iter});
+        if (r.prefs && typeof r.prefs === 'object') await raw.put('meta', {id:'prefs', alertDays:parseInt(r.prefs.alertDays, 10) || 5, autoLock:r.prefs.autoLock == null ? 5 : Number(r.prefs.autoLock) || 0});
         if (r.school && typeof r.school === 'object') await raw.put('meta', {id:'school', school:String(r.school.school || ''), admin:String(r.school.admin || ''), principal:String(r.school.principal || '')});
         await raw.del('meta', 'pin'); await raw.put('meta', {id:'enc', done:true}); await raw.put('meta', {id:'seed', demo:false});
         S.classes = []; S.students = []; S.excuses = []; await renderLock(); toast('تمت الاستعادة. أدخلي رمز الدخول الخاص بهذه النسخة');
@@ -625,7 +791,7 @@ async function readRestore(file) {
 }
 
 /* ---------- الحذف المتسلسل ---------- */
-async function delExcuse(id) { await db.del('excuses', id); await db.del('images', id); S.excuses = S.excuses.filter(e => e.id !== id); }
+async function delExcuse(id) { const e = S.excuses.find(x => x.id === id); if (e) for (const p of photosOf(e)) await db.del('images', p.id); await db.del('excuses', id); await db.del('images', id); S.excuses = S.excuses.filter(e => e.id !== id); }
 async function delStudent(id) { for (const e of exOf(id)) await delExcuse(e.id); await db.del('students', id); S.students = S.students.filter(s => s.id !== id); }
 async function delClass(id) { for (const s of stuOf(id)) await delStudent(s.id); await db.del('classes', id); S.classes = S.classes.filter(c => c.id !== id); }
 
@@ -649,7 +815,7 @@ const ACT = {
   newExcuse: () => excuseForm(null),
   editExcuse: el => excuseForm(S.excuses.find(e => e.id === el.dataset.id)),
   confirmOk: async () => { const cb = confirmCb; confirmCb = null; closeModal(); if (cb) await cb(); },
-  askDelExcuse: el => { const id = el.dataset.id; confirmBox('حذف العذر', 'سيُحذف العذر وصورته نهائياً من هذا الجهاز.', 'حذف العذر', async () => { await delExcuse(id); render(); toast('حُذف العذر'); }); },
+  askDelExcuse: el => { const id = el.dataset.id; confirmBox('حذف العذر', 'سيُحذف العذر وصوره نهائياً من هذا الجهاز.', 'حذف العذر', async () => { await delExcuse(id); render(); toast('حُذف العذر'); }); },
   askDelStudent: () => { const s = stu(topId()); confirmBox('حذف الطالبة', `ستُحذف «${s.name}» وجميع أعذارها (${exOf(s.id).length}) نهائياً.`, 'حذف الطالبة وأعذارها', async () => { await delStudent(s.id); nav.pop(); render(); toast('حُذفت الطالبة'); }); },
   askDelClass: () => { const c = cls(topId()); confirmBox('حذف الفصل', `سيُحذف «${c.name}» مع ${stuOf(c.id).length} طالبة وجميع أعذارهن نهائياً.`, 'حذف الفصل كاملاً', async () => { await delClass(c.id); nav.pop(); render(); toast('حُذف الفصل'); }); },
   askWipeDemo: () => confirmBox('مسح البيانات الوهمية', 'ستُحذف جميع الفصول والطالبات والأعذار الموجودة الآن لتبدئي بسجل فارغ.', 'مسح والبدء بسجل فارغ', async () => { await wipeAll(true); nav = [{v:'home'}]; render(); toast('السجل فارغ الآن'); }),
@@ -658,8 +824,29 @@ const ACT = {
   backup,
   pdfStudent: () => { const s = stu(topId()), c = cls(s.classId); exportPDF('سجل أعذار الطالبة ' + s.name, 'الفصل: ' + (c ? c.name : ''), exOf(s.id), false); },
   pdfClass: () => { const c = cls(topId()), ids = new Set(stuOf(c.id).map(s => s.id)); exportPDF('أعذار فصل ' + c.name, 'جميع الأعذار المسجلة لطالبات الفصل', S.excuses.filter(e => ids.has(e.studentId)).sort((a, b) => b.date.localeCompare(a.date)), true); },
-  pdfDate: () => exportPDF('أعذار يوم ' + qd, hijri(qd), searchExcuses(), true)
+  pdfDate: () => exportPDF('أعذار يوم ' + qd, hijri(qd), searchExcuses(), true),
+  pdfReport: () => reportPDF(),
+  openReport: () => go({v:'report'}),
+  rpPreset: el => { rp = rpPreset(el.dataset.k); const f = $('#rpFrom'), t = $('#rpTo'); if (f) f.value = rp.from; if (t) t.value = rp.to; rpBody(); },
+  rmPhoto: el => { if (!fp) return; const p = fp.list.splice(+el.dataset.i, 1)[0]; if (p && p.id) fp.removed.push(p.id); renderFormPhotos(); },
+  shareExcuse: () => doShare(shareFiles, shareText),
+  shareLast: () => { const lf = lastFile; if (!lf) return; return doShare([lf.file]).then(ok => { if (ok) { if (lf.kind === 'backup') markBackup(); closeModal(); render(); } }); },
+  saveLast: () => { const lf = lastFile; if (!lf) return; return saveFile(lf.file.name, lf.file).then(ok => { if (ok) { if (lf.kind === 'backup') markBackup(); closeModal(); render(); } }); },
+  moveStudent: () => {
+    const s = stu(topId()), others = S.classes.filter(c => c.id !== s.classId);
+    if (!others.length) return toast('لا يوجد فصل آخر. أضيفي فصلاً أولاً');
+    openModal(sheetHead('نقل ' + s.name) + `<p class="sub">اختاري الفصل الجديد. تنتقل معها جميع أعذارها.</p><div class="list">${others.map(c => `<button class="item" data-act="moveTo" data-id="${c.id}"><span class="txt"><span class="name">${esc(c.name)}</span></span>${IC.chev}</button>`).join('')}</div>`);
+  },
+  moveTo: async el => { const s = stu(topId()); if (!s || !cls(el.dataset.id)) return; s.classId = el.dataset.id; await db.put('students', s); closeModal(); nav = [{v:'home'}, {v:'cls', id:s.classId}, {v:'stu', id:s.id}]; render(); toast('نُقلت الطالبة إلى ' + cls(s.classId).name); }
 };
+/* القفل التلقائي عند ترك التطبيق */
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenAt = Date.now(); return; }
+  const m = lockMin();
+  if (unlocked && m > 0 && hiddenAt && Date.now() - hiddenAt > m * 60000 && !$('#exForm') && !$('#bulkForm')) ACT.lock();
+  hiddenAt = 0;
+});
 document.addEventListener('click', e => {
   if (e.target.id === 'modal') return closeModal();
   const el = e.target.closest('[data-act]'); if (!el || !ACT[el.dataset.act]) return;
@@ -670,15 +857,25 @@ document.addEventListener('input', e => {
   else if (e.target.id === 'q') { q = e.target.value; homeList(); }
   else if (e.target.id === 'qd') { qd = e.target.value; homeList(); }
   else if (e.target.id === 'bulkText') $('#bulkCount').textContent = bulkNames().length + ' اسم';
+  else if (e.target.id === 'exDate' || e.target.id === 'exTo') {
+    const a = $('#exDate').value; let b = $('#exTo').value;
+    if (a && (!b || b < a)) { $('#exTo').value = a; b = a; }
+    if (a) $('#exDays').value = schoolDays(a, b);
+  }
+  else if (e.target.id === 'rpFrom' || e.target.id === 'rpTo') { rp = {k:'custom', from:$('#rpFrom').value, to:$('#rpTo').value}; rpBody(); }
 });
 document.addEventListener('change', async e => {
   const t = e.target, f = t.files && t.files[0]; if (!f) return;
   try {
     if (t.id === 'exCam' || t.id === 'exGal') {
-      $('#exPrev').innerHTML = '<span class="sub">جارٍ تجهيز الصورة…</span>'; $('#exSave').disabled = true;
-      const res = await processFile(f); if (!$('#exForm')) return;
-      pending = res; $('#exSave').disabled = false;
-      $('#exPrev').innerHTML = `<img class="thumb" src="${pending.thumb}" alt=""><span class="sub">الصورة جاهزة للحفظ</span>`;
+      if (!fp) return;
+      const room = MAXPH - fp.list.length, st = $('#exPhStatus');
+      if (room <= 0) { toast('الحد ' + MAXPH + ' صور لكل عذر'); t.value = ''; return; }
+      const files = [...t.files].slice(0, room); $('#exSave').disabled = true; if (st) st.textContent = 'جارٍ تجهيز ' + (files.length > 1 ? files.length + ' صور' : 'الصورة') + '…';
+      let bad = 0;
+      for (const file of files) { try { const r = await processFile(file); if (!$('#exForm') || !fp) return; fp.list.push({thumb:r.thumb, full:r.full}); renderFormPhotos(); } catch (err) { bad++; } }
+      if ($('#exSave')) $('#exSave').disabled = false;
+      if (st) st.textContent = bad ? 'تعذرت قراءة ' + (bad > 1 ? bad + ' صور' : 'صورة') + '، جرّبي صورة أخرى.' : (t.files.length > room ? 'أُضيفت ' + room + ' فقط، الحد ' + MAXPH + ' صور.' : '');
     } else if (t.id === 'bulkFile') {
       const names = await readNamesFile(f);
       if (!names.length) return toast('لم نجد أسماء في الملف. الصقي الأسماء يدوياً في المربع.');
@@ -687,7 +884,7 @@ document.addEventListener('change', async e => {
   } catch (err) {
     console.error(err);
     if (t.id === 'bulkFile') toast('تعذرت قراءة الملف. جرّبي حفظه بصيغة CSV أو الصقي الأسماء.');
-    else if (t.id !== 'restoreFile') { pending = null; if ($('#exSave')) $('#exSave').disabled = false; if ($('#exPrev')) $('#exPrev').innerHTML = '<span class="err">تعذرت قراءة الصورة، جرّبي صورة أخرى.</span>'; }
+    else if (t.id !== 'restoreFile') { if ($('#exSave')) $('#exSave').disabled = false; const st = $('#exPhStatus'); if (st) st.textContent = 'تعذرت قراءة الصورة، جرّبي صورة أخرى.'; }
   }
   t.value = '';
 });
@@ -698,6 +895,9 @@ document.addEventListener('submit', async e => {
       const cl = id => $(id).value.replace(/\s+/g, ' ').trim();
       S.school = {id:'school', school:cl('#scSchool'), admin:cl('#scAdmin'), principal:cl('#scPrincipal')};
       await raw.put('meta', S.school); toast('حُفظت بيانات المدرسة');
+    } else if (f.id === 'prefsForm') {
+      S.prefs = {id:'prefs', alertDays:Math.min(99, Math.max(1, parseInt($('#pfAlert').value, 10) || 5)), autoLock:Number($('#pfLock').value) || 0};
+      await raw.put('meta', S.prefs); toast('حُفظت الإعدادات');
     } else if (f.id === 'createForm') {
       const a = $('#pin1').value.trim(), b = $('#pin2').value.trim();
       if (a.length < 6) return $('#lockErr').textContent = 'الرمز يجب أن يكون 6 خانات على الأقل.';
@@ -728,12 +928,17 @@ document.addEventListener('submit', async e => {
       for (const name of names) { const s = {id:'s' + uid(), classId:cid, name}; await db.put('students', s); S.students.push(s); }
       closeModal(); render(); toast('أُضيفت ' + names.length + ' طالبة');
     } else if (f.id === 'exForm') {
-      const date = $('#exDate').value; if (!date) return toast('اختاري تاريخ العذر');
+      const date = $('#exDate').value, to = $('#exTo').value || date; if (!date) return toast('اختاري تاريخ العذر');
+      if (to < date) return toast('تاريخ النهاية قبل تاريخ البداية');
+      if (!fp) return;
       $('#exSave').disabled = true;
       const old = f.dataset.id ? S.excuses.find(x => x.id === f.dataset.id) : null;
-      const ex = old || {id:'e' + uid(), studentId:topId(), created:Date.now(), thumb:'', hasImage:false};
-      ex.date = date; ex.category = $('#exCat').value; ex.notes = $('#exNotes').value.trim();
-      if (pending) { await db.put('images', {id:ex.id, data:pending.full}); ex.thumb = pending.thumb; ex.hasImage = true; }
+      const ex = old || {id:'e' + uid(), studentId:topId(), created:Date.now()};
+      ex.date = date; ex.dateTo = to; ex.days = Math.max(1, parseInt($('#exDays').value, 10) || schoolDays(date, to));
+      ex.category = $('#exCat').value; ex.notes = $('#exNotes').value.trim();
+      for (const p of fp.list) if (!p.id) { const id = 'i' + uid(); await db.put('images', {id, data:p.full}); p.id = id; delete p.full; }
+      for (const id of fp.removed) await db.del('images', id);
+      ex.photos = fp.list.map(p => ({id:p.id, thumb:p.thumb})); ex.thumb = ex.photos.length ? ex.photos[0].thumb : ''; ex.hasImage = ex.photos.length > 0;
       await db.put('excuses', ex); if (!old) S.excuses.push(ex);
       closeModal(); render(); toast('حُفظ العذر');
     }
