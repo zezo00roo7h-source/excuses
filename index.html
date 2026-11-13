@@ -186,6 +186,13 @@ main.wrap{padding-block:18px calc(104px + env(safe-area-inset-bottom,0px));displ
 .gallery{display:flex;flex-direction:column;gap:10px}
 .lowres{font-size:.85rem;color:var(--warn-ink);background:var(--warn-bg);border-radius:12px;padding:8px 12px}
 
+.brows{display:flex;flex-direction:column;gap:12px}
+.brow{position:relative;display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--surface-2)}
+.brow .bf{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.brow .bnum{position:absolute;top:-8px;inset-inline-end:10px;font-size:.75rem;font-weight:600;background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:0 9px}
+.brow .field input,.brow .field select{min-height:44px;box-shadow:none}
+.brow .days{max-width:5.5em}
+.brow select,.brow .bNote{min-height:44px;width:100%;border:1px solid var(--line);border-radius:12px;padding:6px 12px;background:var(--surface);color:var(--ink);font-size:1rem}
 /* شريط التنقل السفلي */
 .tabbar{position:fixed;inset:auto 0 0;z-index:20;display:flex;justify-content:space-around;gap:4px;background:color-mix(in srgb,var(--surface) 90%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-top:1px solid var(--line);padding:6px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .tab{flex:1;max-width:160px;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:transparent;color:var(--muted);font-size:.76rem;font-weight:500;padding:4px;min-height:54px}
@@ -357,7 +364,7 @@ function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = fal
 const HIST = true; let guard = false;
 function armBack() { if (!HIST || guard) return; try { history.pushState({app:1}, ''); guard = true; } catch (e) {} }
 function openModal(html) { armBack(); const m = $('#modal'); m.innerHTML = '<div class="sheet" role="dialog" aria-modal="true">' + html + '</div>'; m.hidden = false; }
-function closeModal() { $('#modal').hidden = true; $('#modal').innerHTML = ''; fp = null; }
+function closeModal() { $('#modal').hidden = true; $('#modal').innerHTML = ''; fp = null; bp = null; }
 const sheetHead = t => `<div class="sheet-head"><h2>${esc(t)}</h2><button class="icon-btn" data-act="close" aria-label="إغلاق">${IC.x}</button></div>`;
 let confirmCb = null;
 function confirmBox(title, msg, okLabel, cb) {
@@ -575,7 +582,7 @@ function vStudent(top) {
   const c = cls(s.classId), ex = exOf(s.id), d = totalDays(s.id), al = alertDays(); $('#barTitle').textContent = s.name;
   $('#view').innerHTML = `<div class="pagehead">${avatar(s.name)}<div class="head"><h2>${esc(s.name)}</h2><p class="sub">${esc(c ? c.name : '')} · ${ex.length} عذر · ${dayWord(d)} غياب</p><p class="sub">السجل المدني: ${s.nid ? bdi(s.nid) : '<span>لم يُسجّل</span>'}</p></div></div>
     ${ex.length && d >= al ? `<div class="notice">تجاوزت الطالبة حد التنبيه: ${dayWord(d)} غياب بعذر (الحد ${al}).</div>` : ''}
-    <div class="actions"><button class="btn primary grow" data-act="newExcuse">${IC.plus} عذر جديد</button>${ex.length ? `<button class="btn grow" data-act="pdfStudent">${IC.pdf} طباعة أو مشاركة الملف (PDF)</button>` : ''}</div>
+    <div class="actions"><button class="btn primary grow" data-act="newExcuse">${IC.plus} عذر جديد</button><button class="btn grow" data-act="batchExcuse">${IC.img} عدة أعذار دفعة واحدة</button></div><div class="actions">${ex.length ? `<button class="btn grow" data-act="pdfStudent">${IC.pdf} طباعة أو مشاركة الملف (PDF)</button>` : ''}</div>
     ${ex.length ? `<div class="list">${ex.map(e => excuseItem(e)).join('')}</div>` : `<div class="empty">${IC.file}<span>لا توجد أعذار محفوظة لهذه الطالبة بعد.</span></div>`}
     <div class="actions"><button class="btn small" data-act="renameStudent">${IC.edit} تعديل البيانات</button><button class="btn small" data-act="moveStudent">${IC.move} نقل لفصل آخر</button><button class="btn small danger" data-act="askDelStudent">${IC.trash} حذف الطالبة</button></div>`;
 }
@@ -709,24 +716,49 @@ async function readNamesFile(file) {
 }
 let fp = null; // صور العذر قيد الإدخال: {list:[{id?, thumb, full?}], removed:[ids]}
 const MAXPH = 6;
-function excuseForm(e) {
+function excuseForm(e, defCat) {
   const s = stu(nav[nav.length - 1].id), from = e ? e.date : todayISO(), to = e ? endOf(e) : from;
   openModal(sheetHead(e ? 'تعديل العذر' : 'عذر جديد') + `<form id="exForm" data-id="${e ? e.id : ''}">
     <p class="sub">${esc(s ? s.name : '')}</p>
     <div class="daterow"><label class="field">من تاريخ<input id="exDate" type="date" value="${esc(from)}" required></label><label class="field">إلى تاريخ<input id="exTo" type="date" value="${esc(to)}"></label></div>
     <label class="field">عدد أيام الغياب<input id="exDays" type="number" min="1" max="200" inputmode="numeric" value="${e ? daysOf(e) : schoolDays(from, to)}"><span class="sub">تُحسب أيام الدوام تلقائياً بدون الجمعة والسبت، ويمكنك تعديلها.</span></label>
-    <label class="field">التصنيف<select id="exCat">${CATS.map(c => `<option value="${c[0]}" ${e && e.category === c[0] ? 'selected' : ''}>${c[1]}</option>`).join('')}</select></label>
+    <label class="field">التصنيف<select id="exCat">${CATS.map(c => `<option value="${c[0]}" ${(e ? e.category : defCat) === c[0] ? 'selected' : ''}>${c[1]}</option>`).join('')}</select></label>
     <label class="field">ملاحظات<textarea id="exNotes" maxlength="500" placeholder="مثال: تقرير طبي من مستشفى الملك فهد">${esc(e ? e.notes : '')}</textarea></label>
     <div class="field">صور العذر (حتى ${MAXPH} صور)<div class="photos" id="exPhotos"></div><span class="sub" id="exPhStatus"></span></div>
     <div class="actions"><label class="btn grow"><input class="vh" id="exCam" type="file" accept="image/*" capture="environment">${IC.cam} تصوير بالكاميرا</label>
     <label class="btn grow"><input class="vh" id="exGal" type="file" accept="image/*" multiple>${IC.img} من المعرض</label></div>
-    <button class="btn primary" type="submit" id="exSave">حفظ العذر</button></form>`);
+    <button class="btn primary" type="submit" id="exSave">حفظ العذر</button>${e ? '' : '<button class="btn" type="submit" id="exSaveNext" data-next="1">حفظ وإضافة عذر آخر</button>'}</form>`);
   fp = {list:(e ? photosOf(e) : []).map(p => ({id:p.id, thumb:p.thumb})), removed:[]};
   renderFormPhotos();
 }
 function renderFormPhotos() {
   const b = $('#exPhotos'); if (!b || !fp) return;
   b.innerHTML = fp.list.length ? fp.list.map((p, i) => `<span class="ph"><img class="thumb" src="${p.thumb}" alt="صورة ${i + 1}"><button type="button" class="ph-x" data-act="rmPhoto" data-i="${i}" aria-label="إزالة الصورة ${i + 1}">${IC.x}</button></span>`).join('') : '<span class="sub">لم تُرفق صورة بعد</span>';
+}
+/* عدة أعذار دفعة واحدة: كل صورة عذر مستقل بتاريخه */
+let bp = null; const MAXB = 30;
+const catOpts = sel => CATS.map(c => `<option value="${c[0]}" ${sel === c[0] ? 'selected' : ''}>${c[1]}</option>`).join('');
+function batchForm() {
+  const s = stu(nav[nav.length - 1].id);
+  openModal(sheetHead('عدة أعذار دفعة واحدة') + `<form id="batchForm">
+    <p class="sub">${esc(s ? s.name : '')} · اختاري صور الأعذار كلها مرة واحدة، وكل صورة تصير عذراً مستقلاً. عدّلي تاريخ كل عذر ثم احفظي الكل.</p>
+    <label class="field">التصنيف للكل<select id="bCatAll">${catOpts('medical')}</select></label>
+    <div class="actions"><label class="btn primary grow"><input class="vh" id="bGal" type="file" accept="image/*" multiple>${IC.img} اختيار الصور من المعرض</label>
+    <label class="btn grow"><input class="vh" id="bCam" type="file" accept="image/*" capture="environment">${IC.cam} تصوير عذر</label></div>
+    <span class="sub" id="bStatus"></span>
+    <div class="brows" id="bRows"></div>
+    <button class="btn primary" type="submit" id="bSave" disabled>حفظ الأعذار</button></form>`);
+  bp = {rows:[]}; renderBatch();
+}
+function syncBatch() { if (!bp) return; document.querySelectorAll('#bRows .brow').forEach((r, i) => { const o = bp.rows[i]; if (!o) return; o.date = r.querySelector('.bDate').value || o.date; o.days = Math.max(1, parseInt(r.querySelector('.bDays').value, 10) || 1); o.cat = r.querySelector('.bCat').value; o.notes = r.querySelector('.bNote').value; }); }
+function renderBatch() {
+  const b = $('#bRows'); if (!b || !bp) return;
+  b.innerHTML = bp.rows.length ? bp.rows.map((o, i) => `<div class="brow"><span class="bnum">${i + 1}</span><img class="thumb" src="${o.thumb}" alt="عذر ${i + 1}"><div class="bf">
+      <div class="daterow"><label class="field">تاريخ العذر<input class="bDate" type="date" value="${esc(o.date)}"></label><label class="field days">الأيام<input class="bDays" type="number" min="1" max="200" inputmode="numeric" value="${o.days}"></label></div>
+      <select class="bCat" aria-label="التصنيف">${catOpts(o.cat)}</select>
+      <input class="bNote" type="text" maxlength="200" placeholder="ملاحظة (اختياري)" value="${esc(o.notes)}" style="min-height:42px;border:1px solid var(--line);border-radius:12px;padding:6px 12px;background:var(--surface);color:var(--ink)">
+    </div><button type="button" class="ph-x" data-act="rmBatch" data-i="${i}" aria-label="إزالة العذر ${i + 1}">${IC.x}</button></div>`).join('') : '<div class="empty">' + IC.img + '<span>لم تُختر صور بعد.</span></div>';
+  const sv = $('#bSave'); if (sv) { sv.disabled = !bp.rows.length; sv.textContent = bp.rows.length ? 'حفظ ' + (bp.rows.length === 1 ? 'العذر' : bp.rows.length + ' أعذار') : 'حفظ الأعذار'; }
 }
 let shareFiles = [], shareText = '';
 async function viewExcuse(id) {
@@ -947,6 +979,8 @@ const ACT = {
   quickExcuse: () => { openModal(sheetHead('تسجيل عذر جديد') + '<label class="field">اكتبي اسم الطالبة ثم اختاريها<input id="qs" type="search" autocomplete="off" placeholder="أول حروف الاسم"></label><div id="qsList"></div>'); qsList(); },
   pickStudent: el => { const s = stu(el.dataset.id); if (!s) return; closeModal(); nav = [{v:'home'}, {v:'cls', id:s.classId}, {v:'stu', id:s.id}]; render(); excuseForm(null); },
   newExcuse: () => excuseForm(null),
+  batchExcuse: () => batchForm(),
+  rmBatch: el => { if (!bp) return; syncBatch(); bp.rows.splice(+el.dataset.i, 1); renderBatch(); },
   editExcuse: el => excuseForm(S.excuses.find(e => e.id === el.dataset.id)),
   confirmOk: async () => { const cb = confirmCb; confirmCb = null; closeModal(); if (cb) await cb(); },
   askDelExcuse: el => { const id = el.dataset.id; confirmBox('حذف العذر', 'سيُحذف العذر وصوره نهائياً من هذا الجهاز.', 'حذف العذر', async () => { await delExcuse(id); render(); toast('حُذف العذر'); }); },
@@ -978,7 +1012,7 @@ let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { hiddenAt = Date.now(); return; }
   const m = lockMin();
-  if (unlocked && m > 0 && hiddenAt && Date.now() - hiddenAt > m * 60000 && !$('#exForm') && !$('#bulkForm')) ACT.lock();
+  if (unlocked && m > 0 && hiddenAt && Date.now() - hiddenAt > m * 60000 && !$('#exForm') && !$('#bulkForm') && !$('#batchForm')) ACT.lock();
   hiddenAt = 0;
 });
 document.addEventListener('click', e => {
@@ -999,6 +1033,7 @@ document.addEventListener('input', e => {
   else if (e.target.id === 'rpFrom' || e.target.id === 'rpTo') { rp = {k:'custom', from:$('#rpFrom').value, to:$('#rpTo').value}; rpBody(); }
 });
 document.addEventListener('change', async e => {
+  if (e.target.id === 'bCatAll' && bp) { syncBatch(); bp.rows.forEach(o => o.cat = e.target.value); renderBatch(); return; }
   if (e.target.id === 'clsSchool') { const c = cls(topId()); if (!c) return; c.school = e.target.value === '2' ? 2 : 1; try { await db.put('classes', c); toast('حُفظت مدرسة الفصل'); } catch (err) { toast('تعذر الحفظ'); } return; }
   const t = e.target, f = t.files && t.files[0]; if (!f) return;
   try {
@@ -1006,11 +1041,21 @@ document.addEventListener('change', async e => {
       if (!fp) return;
       const room = MAXPH - fp.list.length, st = $('#exPhStatus');
       if (room <= 0) { toast('الحد ' + MAXPH + ' صور لكل عذر'); t.value = ''; return; }
-      const files = [...t.files].slice(0, room); $('#exSave').disabled = true; if (st) st.textContent = 'جارٍ تجهيز ' + (files.length > 1 ? files.length + ' صور' : 'الصورة') + '…';
+      const files = [...t.files].slice(0, room); $('#exSave').disabled = true; if ($('#exSaveNext')) $('#exSaveNext').disabled = true; if (st) st.textContent = 'جارٍ تجهيز ' + (files.length > 1 ? files.length + ' صور' : 'الصورة') + '…';
       let bad = 0;
       for (const file of files) { try { const r = await processFile(file); if (!$('#exForm') || !fp) return; fp.list.push({thumb:r.thumb, full:r.full}); renderFormPhotos(); } catch (err) { bad++; } }
-      if ($('#exSave')) $('#exSave').disabled = false;
+      if ($('#exSave')) $('#exSave').disabled = false; if ($('#exSaveNext')) $('#exSaveNext').disabled = false;
       if (st) st.textContent = bad ? 'تعذرت قراءة ' + (bad > 1 ? bad + ' صور' : 'صورة') + '، جرّبي صورة أخرى.' : (t.files.length > room ? 'أُضيفت ' + room + ' فقط، الحد ' + MAXPH + ' صور.' : '');
+    } else if (t.id === 'bGal' || t.id === 'bCam') {
+      if (!bp) return; syncBatch();
+      const room = MAXB - bp.rows.length, st = $('#bStatus'), cat = $('#bCatAll').value;
+      if (room <= 0) { toast('الحد ' + MAXB + ' عذراً في المرة الواحدة'); t.value = ''; return; }
+      const files = [...t.files].slice(0, room); $('#bSave').disabled = true; let bad = 0, k = 0;
+      for (const file of files) {
+        if (st) st.textContent = 'جارٍ تجهيز الصورة ' + (++k) + ' من ' + files.length + '…';
+        try { const r = await processFile(file); if (!$('#batchForm') || !bp) return; syncBatch(); bp.rows.push({thumb:r.thumb, full:r.full, date:todayISO(), days:1, cat, notes:''}); renderBatch(); } catch (err) { bad++; }
+      }
+      renderBatch(); if (st) st.textContent = bad ? 'تعذرت قراءة ' + bad + ' صورة.' : (t.files.length > room ? 'أُضيفت ' + room + ' فقط.' : '');
     } else if (t.id === 'bulkFile') {
       const list = await readNamesFile(f);
       if (!list.length) return toast('لم نجد أسماء في الملف. الصقي الأسماء يدوياً في المربع.');
@@ -1066,6 +1111,15 @@ document.addEventListener('submit', async e => {
       }
       if (!added && !upd) return toast('لا توجد أسماء جديدة للإضافة');
       closeModal(); render(); toast((added ? 'أُضيفت ' + added + ' طالبة' : '') + (added && upd ? ' · ' : '') + (upd ? 'حُدّث السجل المدني لـ ' + upd : ''));
+    } else if (f.id === 'batchForm') {
+      if (!bp || !bp.rows.length) return; syncBatch(); $('#bSave').disabled = true;
+      const sid = topId(), n = bp.rows.length;
+      for (const o of bp.rows) {
+        const iid = 'i' + uid(); await db.put('images', {id:iid, data:o.full});
+        const ex = {id:'e' + uid(), studentId:sid, created:Date.now(), date:o.date || todayISO(), dateTo:o.date || todayISO(), days:o.days, category:o.cat, notes:(o.notes || '').trim(), photos:[{id:iid, thumb:o.thumb}], thumb:o.thumb, hasImage:true};
+        await db.put('excuses', ex); S.excuses.push(ex);
+      }
+      closeModal(); render(); toast('حُفظت ' + (n === 1 ? 'عذر واحد' : n + ' أعذار')); try { if (navigator.vibrate) navigator.vibrate(15); } catch (err) {}
     } else if (f.id === 'exForm') {
       const date = $('#exDate').value, to = $('#exTo').value || date; if (!date) return toast('اختاري تاريخ العذر');
       if (to < date) return toast('تاريخ النهاية قبل تاريخ البداية');
@@ -1079,7 +1133,9 @@ document.addEventListener('submit', async e => {
       for (const id of fp.removed) await db.del('images', id);
       ex.photos = fp.list.map(p => ({id:p.id, thumb:p.thumb})); ex.thumb = ex.photos.length ? ex.photos[0].thumb : ''; ex.hasImage = ex.photos.length > 0;
       await db.put('excuses', ex); if (!old) S.excuses.push(ex);
-      closeModal(); render(); toast('حُفظ العذر'); try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {}
+      const nextCat = e.submitter && e.submitter.dataset.next ? ex.category : null;
+      closeModal(); render(); toast(nextCat ? 'حُفظ العذر، أضيفي التالي' : 'حُفظ العذر'); try { if (navigator.vibrate) navigator.vibrate(15); } catch (err) {}
+      if (nextCat) excuseForm(null, nextCat);
     }
   } catch (err) {
     console.error(err); const b = $('#exSave'); if (b) b.disabled = false;
