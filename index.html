@@ -716,7 +716,7 @@ function vWeek() {
     <button class="btn primary" data-act="pdfWeek" ${list.length ? '' : 'disabled'}>${IC.pdf} طباعة استمارة الحصر الأسبوعي (PDF)</button>
     ${A.recs.length ? '' : '<div class="notice">لا يوجد تحضير مسجل في هذا الأسبوع. التحضير اليومي من تبويب «الحضور» هو اللي يعبّي هذه الاستمارة.</div>'}
     ${list.length ? `<div class="arows">${list.map((o, i) => { const c = cls(o.s.classId); return `<div class="arow"><div class="atog" style="cursor:default"><span class="bnum" style="position:static;font-size:.8rem;font-weight:600;background:var(--accent-soft);color:var(--accent);border-radius:99px;padding:0 9px">${i + 1}</span><span class="name">${esc(o.s.name)}<br><span class="sub">${esc(c ? c.name : '')}</span></span><span class="count ${o.abs >= 3 ? 'warn' : 'has'}">بعذر ${o.ex} · بدون ${o.unex}</span></div>
-      <input class="wnote" data-id="${o.s.id}" maxlength="200" placeholder="ملاحظة (اختياري)${reasonText(o) ? ' — ' + esc(reasonText(o)) : ''}" value="${esc(wnote(wk.start, o.s.id))}" style="min-height:44px;border:1px solid var(--line);border-radius:12px;padding:6px 12px;background:var(--surface);color:var(--ink);font-size:1rem"></div>`; }).join('')}</div>` : (A.recs.length ? '<div class="empty"><span>لا توجد غائبات في هذا الأسبوع.</span></div>' : '')}`;
+      <input class="wnote" data-id="${o.s.id}" maxlength="200" placeholder="تم التواصل (تُكتب تلقائياً إذا تُركت فارغة)" value="${esc(wnote(wk.start, o.s.id))}" style="min-height:44px;border:1px solid var(--line);border-radius:12px;padding:6px 12px;background:var(--surface);color:var(--ink);font-size:1rem"></div>`; }).join('')}</div>` : (A.recs.length ? '<div class="empty"><span>لا توجد غائبات في هذا الأسبوع.</span></div>' : '')}`;
 }
 /* ---------- التقارير ---------- */
 let rp = null;
@@ -1066,7 +1066,7 @@ async function pdfWeek() {
   toast('جارٍ تجهيز الاستمارة…');
   const d = await makeDoc('استمارة حصر غياب الطالبات الأسبوعي', 'الفترة الدراسية ( ' + TERMS[term - 1] + ' )   ·   الأسبوع ( ' + (n > 0 ? n : '   ') + ' )   ·   من ' + hijri(wk.start) + ' إلى ' + hijri(addDays(wk.start, 4)), bothSchools());
   let y = d.page();
-  y = await d.table(y, ['م', 'اسم الطالبة', 'الصف/الشعبة', 'بعذر', 'بدون عذر', 'ملاحظات'], [50, 350, 250, 80, 110], list.map((o, i) => { const c = cls(o.s.classId), red = o.abs >= 3 ? '#A8433F' : null; return [String(i + 1), {t:o.s.name, b:true, color:red}, c ? c.name : '', {t:String(o.ex), color:red}, {t:String(o.unex), color:red}, {t:wnote(wk.start, o.s.id) || reasonText(o), wrap:true}]; }));
+  y = await d.table(y, ['م', 'اسم الطالبة', 'الصف/الشعبة', 'بعذر', 'بدون عذر', 'ملاحظات'], [50, 350, 250, 80, 110], list.map((o, i) => { const c = cls(o.s.classId), red = o.abs >= 3 ? '#A8433F' : null; return [String(i + 1), {t:o.s.name, b:true, color:red}, c ? c.name : '', {t:String(o.ex), color:red}, {t:String(o.unex), color:red}, {t:wnote(wk.start, o.s.id) || 'تم التواصل', wrap:true}]; }));
   y = await d.note(y, 'عدد الغائبات خلال الأسبوع: ' + list.length);
   y = await d.note(y - 16, '* تقوم المسؤولة بحصر الطالبات اللاتي تغيّبن ثلاثة أيام فأكثر خلال الأسبوع (باللون الأحمر)، ويُسلَّم للموجهة الطلابية لدراسة أسباب الغياب.');
   await d.sign(y); await d.flush();
