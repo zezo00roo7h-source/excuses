@@ -356,7 +356,7 @@ async function migratePlain() {
 }
 
 /* ---------- الحالة ---------- */
-const S = {att:[], classes:[], students:[], excuses:[], demo:false, school:{}, prefs:{}, lastBackup:0};
+const S = {wnotes:[], att:[], classes:[], students:[], excuses:[], demo:false, school:{}, prefs:{}, lastBackup:0};
 let nav = [{v:'home'}], q = '', qd = '', unlocked = false;
 const cls = id => S.classes.find(c => c.id === id);
 const stu = id => S.students.find(s => s.id === id);
@@ -410,7 +410,7 @@ const lockMin = () => S.prefs.autoLock == null ? 5 : Number(S.prefs.autoLock);
 async function loadAll() {
   [S.classes, S.students, S.excuses] = await Promise.all([db.all('classes'), db.all('students'), db.all('excuses')]);
   S.classes.sort((a, b) => a.created - b.created);
-  S.att = await db.all('att');
+  const allAtt = await db.all('att'); S.att = allAtt.filter(a => !a.kind); S.wnotes = allAtt.filter(a => a.kind === 'wnote');
   const m = await db.get('meta', 'seed'); S.demo = !!(m && m.demo);
   S.school = (await raw.get('meta', 'school')) || {};
   S.prefs = (await raw.get('meta', 'prefs')) || {};
@@ -563,9 +563,9 @@ function render() {
   if (!unlocked) return;
   const top = nav[nav.length - 1];
   $('#backBtn').hidden = nav.length < 2;
-  const tab = top.v === 'report' ? 'report' : top.v === 'settings' ? 'settings' : (top.v === 'att' || top.v === 'attcls') ? 'att' : 'home';
+  const tab = top.v === 'report' ? 'report' : top.v === 'settings' ? 'settings' : (top.v === 'att' || top.v === 'attcls' || top.v === 'week') ? 'att' : 'home';
   document.querySelectorAll('.tab').forEach(b => { const on = b.dataset.tab === tab; b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-  ({home:vHome, cls:vClass, stu:vStudent, settings:vSettings, report:vReport, att:vAtt, attcls:vAttCls}[top.v])(top);
+  ({home:vHome, cls:vClass, stu:vStudent, settings:vSettings, report:vReport, att:vAtt, attcls:vAttCls, week:vWeek}[top.v])(top);
 }
 function vHome() {
   $('#barTitle').textContent = 'سجل أعذار الطالبات';
@@ -666,7 +666,7 @@ function vAtt() {
     ${isWeekend(attDate) ? '<div class="notice">هذا اليوم عطلة نهاية الأسبوع.</div>' : ''}
     <div class="stats"><div class="stat"><b>${done.length}/${recs.length}</b><span>فصول محضّرة</span></div><div class="stat"><b>${reg - abs}</b><span>حاضرة</span></div><div class="stat"><b>${abs}</b><span>غائبة</span></div></div>
     ${recs.length ? `<div class="list">${recs.map(r => { const n = r.rec ? Object.keys(r.rec.absent || {}).length : 0; return `<button class="item" data-act="openAttCls" data-id="${r.c.id}"><span class="txt"><span class="name">${esc(r.c.name)}</span><span class="sub">${r.st} طالبة</span></span><span class="count ${r.rec ? (n ? 'warn' : 'has') : ''}">${r.rec ? (n ? n + ' غائبة' : 'الكل حاضرات') : 'لم يُحضَّر'}</span>${IC.chev}</button>`; }).join('')}</div>` : '<div class="empty">' + IC.users + '<span>أضيفي الفصول أولاً من الرئيسية.</span></div>'}
-    <div class="actions"><button class="btn primary grow" data-act="pdfDaily" ${done.length ? '' : 'disabled'}>${IC.pdf} الكشف اليومي (PDF)</button><button class="btn grow" data-act="openAttReport">${IC.chart} الحصر الأسبوعي والشهري</button></div>`;
+    <div class="actions"><button class="btn primary grow" data-act="pdfDaily" ${done.length ? '' : 'disabled'}>${IC.pdf} الكشف اليومي (PDF)</button><button class="btn grow" data-act="openWeek">${IC.file} الحصر الأسبوعي</button></div><div class="actions"><button class="btn grow" data-act="openAttReport">${IC.chart} الحصر الأسبوعي والشهري</button></div>`;
 }
 function vAttCls(top) {
   const c = cls(top.id); if (!c) return back();
@@ -687,6 +687,36 @@ function renderAttRows() {
     return `<div class="arow ${ab ? 'abs' : ''}"><button class="atog" data-act="toggleAbs" data-id="${s.id}" aria-pressed="${ab ? 'true' : 'false'}">${avatar(s.name)}<span class="name">${esc(s.name)}</span><span class="apill">${ab ? 'غائبة' : 'حاضرة'}</span></button>
       ${ab ? `<select class="absReason" data-id="${s.id}" aria-label="سبب غياب ${esc(s.name)}">${ABS.map(([k, l]) => `<option value="${k}" ${ab.reason === k ? 'selected' : ''}>${l}</option>`).join('')}</select>${ex ? `<span class="exhint">عذر مسجل في التطبيق: ${esc(catName(ex.category))}</span>` : ''}` : ''}</div>`; }).join('') || '<div class="empty"><span>لا توجد طالبات في هذا الفصل.</span></div>';
   const cnt = $('#attCount'); if (cnt) cnt.textContent = `المسجلات ${st.length} · الحاضرات ${st.length - n} · الغائبات ${n}`;
+}
+/* ---------- الحصر الأسبوعي ---------- */
+const TERMS = ['الأولى', 'الثانية', 'الثالثة'];
+const weekStartOf = iso => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() - d.getDay()); return isoOf(d); };
+const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return isoOf(d); };
+const weekNumOf = iso => { const ts = S.prefs.termStart; if (!ts) return 0; return Math.round((new Date(weekStartOf(iso) + 'T12:00:00') - new Date(weekStartOf(ts) + 'T12:00:00')) / 6048e5) + 1; };
+const wnoteId = (start, sid) => 'wn|' + start + '|' + sid;
+const wnote = (start, sid) => (S.wnotes.find(n => n.id === wnoteId(start, sid)) || {}).text || '';
+let wk = null;
+function weekData(start) {
+  const A = attData(start, addDays(start, 6));
+  const rows = A.students.filter(o => o.abs > 0).sort((a, b) => ((cls(a.s.classId) || {}).created || 0) - ((cls(b.s.classId) || {}).created || 0) || a.s.name.localeCompare(b.s.name, 'ar'));
+  return {A, rows};
+}
+function vWeek() {
+  if (!wk) wk = {start:weekStartOf(todayISO()), only3:false};
+  $('#barTitle').textContent = 'الحصر الأسبوعي';
+  const term = S.prefs.term || 1, ts = S.prefs.termStart, n = weekNumOf(wk.start), {A, rows} = weekData(wk.start), list = wk.only3 ? rows.filter(o => o.abs >= 3) : rows;
+  let weekSel;
+  if (ts) { const first = weekStartOf(ts), max = Math.max(16, n); weekSel = `<label class="field">الأسبوع<select id="wkNum">${Array.from({length:max}, (_, i) => { const st = addDays(first, i * 7); return `<option value="${st}" ${st === wk.start ? 'selected' : ''}>الأسبوع ${i + 1} · ${esc(hijri(st))}</option>`; }).join('')}</select></label>`; }
+  else weekSel = `<label class="field">اختاري أي يوم من الأسبوع<input id="wkDate" type="date" value="${esc(wk.start)}"></label>`;
+  $('#view').innerHTML = `<div class="pagehead"><span class="ic">${IC.file}</span><div class="head"><h2>استمارة الحصر الأسبوعي</h2><p class="sub">الفترة ${TERMS[term - 1]}${n > 0 ? ' · الأسبوع ' + n : ''} · من ${esc(hijri(wk.start))} إلى ${esc(hijri(addDays(wk.start, 4)))}</p></div></div>
+    <div class="daterow"><label class="field">الفترة الدراسية<select id="wkTerm">${TERMS.map((t, i) => `<option value="${i + 1}" ${term === i + 1 ? 'selected' : ''}>${t}</option>`).join('')}</select></label>${weekSel}</div>
+    ${ts ? '' : '<div class="notice">حددي «تاريخ بداية الفترة الدراسية» من الإعدادات، ليُحسب رقم الأسبوع تلقائياً وتختاريه من القائمة.</div>'}
+    <div class="stats"><div class="stat"><b>${rows.length}</b><span>غائبة خلال الأسبوع</span></div><div class="stat"><b>${A.exTot}</b><span>يوم بعذر</span></div><div class="stat"><b>${A.unexTot}</b><span>يوم بدون عذر</span></div></div>
+    <div class="chips"><button class="chipbtn ${wk.only3 ? '' : 'on'}" data-act="wkOnly" data-v="0">كل الغائبات (${rows.length})</button><button class="chipbtn ${wk.only3 ? 'on' : ''}" data-act="wkOnly" data-v="1">3 أيام فأكثر (${rows.filter(o => o.abs >= 3).length})</button></div>
+    <button class="btn primary" data-act="pdfWeek" ${list.length ? '' : 'disabled'}>${IC.pdf} طباعة استمارة الحصر الأسبوعي (PDF)</button>
+    ${A.recs.length ? '' : '<div class="notice">لا يوجد تحضير مسجل في هذا الأسبوع. التحضير اليومي من تبويب «الحضور» هو اللي يعبّي هذه الاستمارة.</div>'}
+    ${list.length ? `<div class="arows">${list.map((o, i) => { const c = cls(o.s.classId); return `<div class="arow"><div class="atog" style="cursor:default"><span class="bnum" style="position:static;font-size:.8rem;font-weight:600;background:var(--accent-soft);color:var(--accent);border-radius:99px;padding:0 9px">${i + 1}</span><span class="name">${esc(o.s.name)}<br><span class="sub">${esc(c ? c.name : '')}</span></span><span class="count ${o.abs >= 3 ? 'warn' : 'has'}">بعذر ${o.ex} · بدون ${o.unex}</span></div>
+      <input class="wnote" data-id="${o.s.id}" maxlength="200" placeholder="ملاحظة (اختياري)${reasonText(o) ? ' — ' + esc(reasonText(o)) : ''}" value="${esc(wnote(wk.start, o.s.id))}" style="min-height:44px;border:1px solid var(--line);border-radius:12px;padding:6px 12px;background:var(--surface);color:var(--ink);font-size:1rem"></div>`; }).join('')}</div>` : (A.recs.length ? '<div class="empty"><span>لا توجد غائبات في هذا الأسبوع.</span></div>' : '')}`;
 }
 /* ---------- التقارير ---------- */
 let rp = null;
@@ -765,11 +795,12 @@ async function vSettings() {
     <label class="field">اسم الوكيلة الطلابية<input id="scWakila" maxlength="80" autocomplete="off" value="${esc(sc.wakila || '')}"></label>
     <label class="field">اسم مديرة المدرسة<input id="scPrincipal" maxlength="80" autocomplete="off" value="${esc(sc.principal || '')}"></label>
     <button class="btn primary" type="submit">حفظ بيانات المدرسة</button></form></section>
-    <section class="group"><h2>${IC.bell} التنبيه والمظهر والقفل</h2>
+    <section class="group"><h2>${IC.bell} الفترة الدراسية والتنبيه والمظهر</h2>
     <form id="prefsForm" style="display:flex;flex-direction:column;gap:12px">
     <label class="field">نبّهيني إذا وصلت أيام غياب الطالبة بعذر إلى<input id="pfAlert" type="number" min="1" max="99" inputmode="numeric" value="${alertDays()}"></label>
     <label class="field">مظهر التطبيق<select id="pfTheme">${[['auto','تلقائي حسب الجوال'],['light','فاتح'],['dark','داكن']].map(([v, l]) => `<option value="${v}" ${(S.prefs.theme || 'auto') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
     <label class="field">قفل التطبيق تلقائياً بعد تركه<select id="pfLock">${[[1,'دقيقة واحدة'],[5,'5 دقائق'],[15,'15 دقيقة'],[0,'بدون قفل تلقائي']].map(([v, l]) => `<option value="${v}" ${lockMin() === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    <div class="daterow"><label class="field">الفترة الدراسية الحالية<select id="pfTerm">${TERMS.map((t, i) => `<option value="${i + 1}" ${(S.prefs.term || 1) === i + 1 ? 'selected' : ''}>${t}</option>`).join('')}</select></label><label class="field">تاريخ بداية الفترة<input id="pfTermStart" type="date" value="${esc(S.prefs.termStart || '')}"></label></div>
     <label class="field">تذكيري بالنسخة الاحتياطية<select id="pfBackup">${[[7,'كل أسبوع'],[14,'كل أسبوعين'],[30,'كل شهر'],[0,'بدون تذكير']].map(([v, l]) => `<option value="${v}" ${backupDays() === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
     <button class="btn primary" type="submit">حفظ</button></form></section>
     <section class="group"><h2>${IC.cloud} النسخ الاحتياطي</h2>
@@ -980,7 +1011,7 @@ async function makeDoc(title, sub, schoolName) {
     }
     return y;
   };
-  d.note = async (y, t) => { y = await d.room(y, 60); x.textAlign = 'right'; x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText(t, R, y + 44); return y + 60; };
+  d.note = async (y, t) => { x.font = '22px ' + BF; const ls = wrapText(x, t, W - 2 * M, 3); y = await d.room(y, 28 + ls.length * 32); x.textAlign = 'right'; x.fillStyle = MUT; x.font = '22px ' + BF; ls.forEach((l, i) => x.fillText(l, R, y + 44 + i * 32)); return y + 28 + ls.length * 32; };
   d.sign = async y => {
     const people = [['الإدارية المسؤولة', sc.admin], ['الوكيلة الطلابية', sc.wakila], ['مديرة المدرسة', sc.principal]].filter(p => p[1]);
     if (!people.length) return y;
@@ -1028,6 +1059,18 @@ async function exportPDF(title, sub, list, withStudent, schoolName) {
     }
   }
   fileReady(safeName(title) + ' ' + todayISO() + '.pdf', d.blob(), 'pdf');
+}
+async function pdfWeek() {
+  const term = S.prefs.term || 1, n = weekNumOf(wk.start), {rows} = weekData(wk.start), list = wk.only3 ? rows.filter(o => o.abs >= 3) : rows;
+  if (!list.length) return toast('لا توجد غائبات في هذا الأسبوع');
+  toast('جارٍ تجهيز الاستمارة…');
+  const d = await makeDoc('استمارة حصر غياب الطالبات الأسبوعي', 'الفترة الدراسية ( ' + TERMS[term - 1] + ' )   ·   الأسبوع ( ' + (n > 0 ? n : '   ') + ' )   ·   من ' + hijri(wk.start) + ' إلى ' + hijri(addDays(wk.start, 4)), bothSchools());
+  let y = d.page();
+  y = await d.table(y, ['م', 'اسم الطالبة', 'الصف/الشعبة', 'بعذر', 'بدون عذر', 'ملاحظات'], [50, 350, 250, 80, 110], list.map((o, i) => { const c = cls(o.s.classId), red = o.abs >= 3 ? '#A8433F' : null; return [String(i + 1), {t:o.s.name, b:true, color:red}, c ? c.name : '', {t:String(o.ex), color:red}, {t:String(o.unex), color:red}, {t:wnote(wk.start, o.s.id) || reasonText(o), wrap:true}]; }));
+  y = await d.note(y, 'عدد الغائبات خلال الأسبوع: ' + list.length);
+  y = await d.note(y - 16, '* تقوم المسؤولة بحصر الطالبات اللاتي تغيّبن ثلاثة أيام فأكثر خلال الأسبوع (باللون الأحمر)، ويُسلَّم للموجهة الطلابية لدراسة أسباب الغياب.');
+  await d.sign(y); await d.flush();
+  fileReady('استمارة الحصر الأسبوعي ' + (n > 0 ? 'الأسبوع ' + n + ' ' : '') + wk.start + '.pdf', d.blob(), 'pdf');
 }
 async function pdfDaily() {
   const date = attDate || todayISO(), list = S.classes.map(c => ({c, st:stuOf(c.id), rec:attOf(date, c.id)}));
@@ -1164,7 +1207,7 @@ async function readRestore(file) {
       if (v2) {
         for (const s of ENC) for (const v of (r[s] || [])) if (v && v.id) await raw.put(s, v.ct ? {id:v.id, iv:unb64(v.iv), ct:unb64(v.ct)} : v);
         await raw.put('meta', {id:'key', salt:unb64(r.key.salt), iv:unb64(r.key.iv), wrapped:unb64(r.key.wrapped), iter:r.key.iter});
-        if (r.prefs && typeof r.prefs === 'object') await raw.put('meta', {id:'prefs', alertDays:parseInt(r.prefs.alertDays, 10) || 5, autoLock:r.prefs.autoLock == null ? 5 : Number(r.prefs.autoLock) || 0, theme:['light','dark'].includes(r.prefs.theme) ? r.prefs.theme : 'auto', backupDays:r.prefs.backupDays == null ? 7 : Number(r.prefs.backupDays) || 0});
+        if (r.prefs && typeof r.prefs === 'object') await raw.put('meta', {id:'prefs', alertDays:parseInt(r.prefs.alertDays, 10) || 5, autoLock:r.prefs.autoLock == null ? 5 : Number(r.prefs.autoLock) || 0, theme:['light','dark'].includes(r.prefs.theme) ? r.prefs.theme : 'auto', backupDays:r.prefs.backupDays == null ? 7 : Number(r.prefs.backupDays) || 0, term:Number(r.prefs.term) || 1, termStart:/^\d{4}-\d{2}-\d{2}$/.test(r.prefs.termStart || '') ? r.prefs.termStart : ''});
         if (r.school && typeof r.school === 'object') await raw.put('meta', {id:'school', school:String(r.school.school || ''), school2:String(r.school.school2 || ''), admin:String(r.school.admin || ''), wakila:String(r.school.wakila || ''), principal:String(r.school.principal || '')});
         await raw.del('meta', 'pin'); await raw.put('meta', {id:'enc', done:true}); await raw.put('meta', {id:'seed', demo:false});
         S.classes = []; S.students = []; S.excuses = []; await renderLock(); toast('تمت الاستعادة. أدخلي رمز الدخول الخاص بهذه النسخة');
@@ -1204,6 +1247,9 @@ const ACT = {
   batchExcuse: () => batchForm(),
   openAtt: () => tabTo('att'),
   openAttCls: el => { attDraft = null; go({v:'attcls', id:el.dataset.id}); },
+  openWeek: () => { if (!wk) wk = {start:weekStartOf(attDate || todayISO()), only3:false}; go({v:'week'}); },
+  wkOnly: el => { wk.only3 = el.dataset.v === '1'; vWeek(); },
+  pdfWeek: () => pdfWeek(),
   openAttReport: () => { rpMode = 'att'; if (!rp || rp.k === 'all') rp = rpPreset('week'); tabTo('report'); },
   rpMode: el => { rpMode = el.dataset.m; vReport(); },
   toggleAbs: el => { if (!attDraft) return; const id = el.dataset.id; if (attDraft.absent[id]) delete attDraft.absent[id]; else { const ex = excuseOn(id, attDraft.date); attDraft.absent[id] = {reason:ex ? (CAT2ABS[ex.category] || 'other') : 'none'}; } const y = window.scrollY; renderAttRows(); window.scrollTo(0, y); },
@@ -1251,6 +1297,7 @@ document.addEventListener('click', e => {
   Promise.resolve(ACT[el.dataset.act](el)).catch(err => { console.error(err); toast('حدث خطأ غير متوقع، أعيدي المحاولة'); });
 });
 document.addEventListener('input', e => {
+  if (e.target.id === 'wkDate') { wk.start = weekStartOf(e.target.value || todayISO()); vWeek(); return; }
   if (e.target.id === 'attDate') { attDate = e.target.value || todayISO(); attDraft = null; vAtt(); return; }
   if (e.target.id === 'qs') qsList();
   else if (e.target.id === 'q') { q = e.target.value; homeList(); }
@@ -1266,6 +1313,9 @@ document.addEventListener('input', e => {
 document.addEventListener('change', async e => {
   if (e.target.classList && e.target.classList.contains('absReason') && attDraft) { const a = attDraft.absent[e.target.dataset.id]; if (a) a.reason = e.target.value; return; }
   if (e.target.id === 'bCatAll' && bp) { syncBatch(); bp.rows.forEach(o => o.cat = e.target.value); renderBatch(); return; }
+  if (e.target.id === 'wkNum') { wk.start = e.target.value; vWeek(); return; }
+  if (e.target.id === 'wkTerm') { S.prefs = Object.assign({}, S.prefs, {id:'prefs', term:Number(e.target.value) || 1}); try { await raw.put('meta', S.prefs); } catch (err) {} vWeek(); return; }
+  if (e.target.classList && e.target.classList.contains('wnote') && wk) { const rec = {id:wnoteId(wk.start, e.target.dataset.id), kind:'wnote', start:wk.start, sid:e.target.dataset.id, text:e.target.value.trim()}; try { await db.put('att', rec); S.wnotes = S.wnotes.filter(n => n.id !== rec.id).concat(rec); toast('حُفظت الملاحظة'); } catch (err) { toast('تعذر حفظ الملاحظة'); } return; }
   if (e.target.id === 'clsSchool') { const c = cls(topId()); if (!c) return; c.school = e.target.value === '2' ? 2 : 1; try { await db.put('classes', c); toast('حُفظت مدرسة الفصل'); } catch (err) { toast('تعذر الحفظ'); } return; }
   const t = e.target, f = t.files && t.files[0]; if (!f) return;
   try {
@@ -1309,7 +1359,7 @@ document.addEventListener('submit', async e => {
       S.school = {id:'school', school:cl('#scSchool'), school2:cl('#scSchool2'), admin:cl('#scAdmin'), wakila:cl('#scWakila'), principal:cl('#scPrincipal')};
       await raw.put('meta', S.school); toast('حُفظت بيانات المدرسة');
     } else if (f.id === 'prefsForm') {
-      S.prefs = {id:'prefs', alertDays:Math.min(99, Math.max(1, parseInt($('#pfAlert').value, 10) || 5)), autoLock:Number($('#pfLock').value) || 0, theme:$('#pfTheme').value, backupDays:Number($('#pfBackup').value) || 0};
+      S.prefs = {id:'prefs', alertDays:Math.min(99, Math.max(1, parseInt($('#pfAlert').value, 10) || 5)), autoLock:Number($('#pfLock').value) || 0, theme:$('#pfTheme').value, backupDays:Number($('#pfBackup').value) || 0, term:Number($('#pfTerm').value) || 1, termStart:$('#pfTermStart').value || ''};
       await raw.put('meta', S.prefs); applyTheme(); toast('حُفظت الإعدادات');
     } else if (f.id === 'createForm') {
       const a = $('#pin1').value.trim(), b = $('#pin2').value.trim();
