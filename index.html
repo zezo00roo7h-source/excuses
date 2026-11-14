@@ -106,6 +106,31 @@ main.wrap{padding-block:18px calc(104px + env(safe-area-inset-bottom,0px));displ
 .searchbox{position:relative}
 .searchbox svg{position:absolute;inset-inline-start:14px;top:50%;transform:translateY(-50%);color:var(--muted);width:20px;height:20px;pointer-events:none}
 .searchbox input{padding-inline-start:44px!important}
+.dash{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:14px}
+.dash h3{margin:0;font-family:var(--display);font-size:1.05rem;display:flex;align-items:center;gap:8px}
+.dash h3 svg{width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dash .dsub{font-size:.85rem;color:var(--muted);font-weight:400;margin-inline-start:auto}
+.prog{height:10px;border-radius:99px;background:var(--surface-2);overflow:hidden}.prog i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.prog.full i{background:var(--ok)}
+.dstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.dstat{background:var(--surface-2);border-radius:var(--r-sm);padding:10px 4px;text-align:center;display:flex;flex-direction:column}
+.dstat b{font-family:var(--display);font-size:1.4rem;line-height:1.3;color:var(--accent);font-variant-numeric:tabular-nums}.dstat span{font-size:.78rem;color:var(--muted)}
+.dstat.bad b{color:var(--danger)}
+.pend{display:flex;flex-wrap:wrap;gap:8px}
+.okline{background:var(--ok-bg);color:var(--ok);border-radius:var(--r-sm);padding:10px 14px;font-size:.92rem;font-weight:600}
+.wkbars{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:end;border:0;background:none;padding:0;width:100%;color:inherit;font:inherit;cursor:pointer}
+.wkb{display:flex;flex-direction:column;align-items:center;gap:4px}
+.wkb .bar{width:100%;max-width:38px;height:76px;display:flex;align-items:flex-end;background:var(--surface-2);border-radius:10px;overflow:hidden}
+.wkb .bar i{display:block;width:100%;background:var(--accent);opacity:.55;border-radius:10px 10px 0 0}
+.wkb.today .bar i{opacity:1}.wkb.none .bar i{height:0!important}
+.wkb b{font-size:.9rem;font-variant-numeric:tabular-nums}.wkb span{font-size:.75rem;color:var(--muted)}.wkb.today span{color:var(--accent);font-weight:700}
+.dalerts{display:flex;flex-direction:column;gap:8px}
+.dalert{display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 12px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:start;font:inherit;width:100%;cursor:pointer}
+.dalert .txt{flex:1;display:flex;flex-direction:column;min-width:0}.dalert .name{font-weight:600}.dalert .sub{font-size:.8rem;color:var(--muted)}
+.dalert .tag{font-size:.78rem;border-radius:99px;padding:3px 10px;white-space:nowrap;background:var(--warn-bg);color:var(--warn-ink)}
+.dalert .tag.red{background:var(--danger);color:#fff}
+.dremind{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r-sm);background:var(--accent-soft);color:var(--ink);border:0;font:inherit;text-align:start;width:100%;cursor:pointer;min-height:48px}
+.dremind span{flex:1;font-size:.9rem}.dremind svg{width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:2;flex:none}
 .ccards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .ccard{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);text-align:start;min-width:0;color:var(--ink);transition:transform .12s ease}
 .ccard:active{transform:scale(.98)}
@@ -119,6 +144,32 @@ main.wrap{padding-block:18px calc(104px + env(safe-area-inset-bottom,0px));displ
 .tile:active{transform:scale(.97)}
 .av{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:1.35rem;font-weight:600;color:var(--cc);background:color-mix(in srgb,var(--cc) 15%,var(--surface));box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--cc) 22%,transparent)}
 .tile .name{font-weight:500;overflow-wrap:anywhere;line-height:1.5}
+.phero{padding:18px;gap:14px;border-radius:24px}
+.phero .top{position:relative;z-index:1;display:flex;align-items:center;gap:14px}
+.phero .top .head{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+.phero h2{font-size:1.3rem;line-height:1.5;overflow-wrap:anywhere}
+.phero .pill{align-self:flex-start;font-size:.8rem;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);border-radius:99px;padding:2px 12px}
+.phero .av{width:58px;height:58px;font-size:1.5rem;color:#fff;background:rgba(255,255,255,.18);box-shadow:inset 0 0 0 2px rgba(255,255,255,.4);flex:none}
+.phero .cic{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:rgba(255,255,255,.18);flex:none}
+.phero .cic svg{width:26px;height:26px;stroke:#fff}
+.srows{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.srow{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:10px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);text-align:start;font:inherit;transition:background .15s ease}
+.srow:last-child{border-bottom:0}.srow:active{background:var(--surface-2)}
+.srow .num{width:20px;flex:none;text-align:center;font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.srow .av{width:40px;height:40px;font-size:1.05rem;flex:none}
+.srow .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.srow .name{font-weight:600;font-size:1rem;line-height:1.55;overflow-wrap:anywhere}
+.srow .sub{font-size:.8rem;color:var(--muted)}.srow .sub.has{color:var(--accent)}.srow .sub.warn{color:var(--warn-ink)}
+.srow .chev{width:18px;height:18px;opacity:.45;flex:none}
+.inforow{display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.inforow:last-child{border-bottom:0}
+.inforow .lbl{flex:1;min-width:0;display:flex;flex-direction:column}.inforow .lbl small{font-size:.8rem;color:var(--muted)}.inforow .lbl b{font-weight:600;font-variant-numeric:tabular-nums}
+.inforow .lbl b.none{font-weight:400;color:var(--muted)}
+.inforow .icon-btn{background:var(--accent-soft);color:var(--accent);width:42px;height:42px;border-radius:12px}
+.inforow .icon-btn svg{width:20px;height:20px}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px}.sec-h h3{margin:0;font-family:var(--display);font-size:1.05rem}
+.mrow{display:flex;align-items:center;gap:12px;width:100%;min-height:54px;padding:10px 16px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);text-align:start;font:inherit}
+.mrow:last-child{border-bottom:0}.mrow svg{width:20px;height:20px;flex:none;color:var(--muted)}.mrow span{flex:1}.mrow.danger,.mrow.danger svg{color:var(--danger)}
 .pagehead{display:flex;align-items:center;gap:14px}
 .pagehead .av{width:60px;height:60px;font-size:1.5rem}
 .pagehead .ic{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
@@ -288,6 +339,7 @@ const IC = {
   x:'<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
   chart:'<svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17v-5"/><path d="M13 17V8"/><path d="M18 17v-3"/></svg>',
   share:'<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>',
+  copy:'<svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
   move:'<svg viewBox="0 0 24 24"><path d="m16 3 4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16"/></svg>',
   users:'<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
   userplus:'<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>',
@@ -628,6 +680,50 @@ function vHome() {
       <button class="btn" data-act="clearSearch">مسح البحث</button></div></section><div id="homeList" style="display:flex;flex-direction:column;gap:16px"></div>`;
   homeList();
 }
+/* ---------- اللوحة الذكية ---------- */
+const WKD = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس'];
+const absCount = date => S.att.filter(a => a.date === date && cls(a.classId)).reduce((n, a) => n + Object.keys(a.absent || {}).filter(id => stu(id)).length, 0);
+function streaks(t) {
+  const out = new Map(), from = addDays(t, -7);
+  for (const c of S.classes) {
+    const recs = S.att.filter(a => a.classId === c.id && a.date <= t).sort((a, b) => b.date.localeCompare(a.date));
+    if (!recs.length || recs[0].date < from) continue;
+    for (const s of stuOf(c.id)) { let n = 0; for (const r of recs) { if (r.absent && r.absent[s.id]) n++; else break; } if (n >= 3) out.set(s.id, n); }
+  }
+  return out;
+}
+function dashHTML() {
+  if (!S.classes.length) return '';
+  const t = todayISO(), we = isWeekend(t), al = alertDays();
+  let h = `<section class="dash" aria-label="اللوحة الذكية"><h3>${IC.chart} لوحة اليوم<span class="dsub">${esc(dayName(t))} ${esc(hijri(t))}</span></h3>`;
+  if (we) h += `<div class="okline" style="background:var(--surface-2);color:var(--muted)">اليوم عطلة نهاية الأسبوع.</div>`;
+  else {
+    const recs = S.classes.map(c => ({c, rec:attOf(t, c.id), n:stuOf(c.id).length})), done = recs.filter(r => r.rec), pend = recs.filter(r => !r.rec);
+    let abs = 0, unex = 0, reg = 0;
+    done.forEach(r => { reg += r.n; Object.entries(r.rec.absent || {}).forEach(([sid, ab]) => { if (!stu(sid)) return; abs++; if (effReason(sid, t, ab.reason) === 'none') unex++; }); });
+    const rate = reg ? Math.round((reg - abs) / reg * 100) : 0, pct = Math.round(done.length / recs.length * 100);
+    h += `<div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;font-size:.9rem"><span>تحضير الفصول</span><b>${done.length} من ${recs.length}</b></div><div class="prog ${pend.length ? '' : 'full'}"><i style="width:${pct}%"></i></div></div>`;
+    h += pend.length ? `<div class="pend">${pend.map(r => `<button class="chipbtn" data-act="dashCls" data-id="${r.c.id}">${esc(r.c.name)}</button>`).join('')}</div>` : `<div class="okline">اكتمل تحضير كل الفصول اليوم ✓</div>`;
+    if (done.length) h += `<div class="dstats"><div class="dstat"><b>${abs}</b><span>غائبة اليوم</span></div><div class="dstat ${unex ? 'bad' : ''}"><b>${unex}</b><span>بدون عذر</span></div><div class="dstat"><b>${rate}%</b><span>نسبة الحضور</span></div></div>`;
+  }
+  // الأسبوع الحالي
+  const ws = weekStartOf(t), days = WKD.map((l, i) => { const d = addDays(ws, i); return {l, d, has:S.att.some(a => a.date === d), n:absCount(d)}; }), mx = Math.max(1, ...days.map(x => x.n));
+  h += `<div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;font-size:.9rem"><span>غياب هذا الأسبوع</span><span class="sub">اضغطي لفتح الحصر</span></div><button class="wkbars" data-act="dashWeek" aria-label="غياب هذا الأسبوع، افتحي الحصر الأسبوعي">${days.map(x => `<span class="wkb ${x.d === t ? 'today' : ''} ${x.has ? '' : 'none'}"><b>${x.has ? x.n : '–'}</b><span class="bar"><i style="height:${Math.max(6, Math.round(x.n / mx * 100))}%"></i></span><span>${x.l}</span></span>`).join('')}</button></div>`;
+  // يحتاج متابعة
+  const st = streaks(t), M = attData(hijriMonthStart(t), t), items = new Map();
+  st.forEach((n, sid) => items.set(sid, {p:0, tag:`${n} أيام متتالية`, red:true}));
+  M.students.forEach(o => { if (items.has(o.s.id)) return; if (o.abs >= al) items.set(o.s.id, {p:1, tag:`${o.abs} أيام هذا الشهر`, red:true}); else if (al > 1 && o.abs === al - 1) items.set(o.s.id, {p:2, tag:'قربت من الحد'}); });
+  const list = [...items.entries()].map(([sid, v]) => Object.assign({s:stu(sid)}, v)).filter(x => x.s).sort((a, b) => a.p - b.p || a.s.name.localeCompare(b.s.name, 'ar'));
+  if (list.length) h += `<div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:.9rem;font-weight:600">يحتاج متابعة (${list.length})</div><div class="dalerts">${list.slice(0, 6).map(x => { const c = cls(x.s.classId); return `<button class="dalert" data-act="openStudent" data-id="${x.s.id}">${avatar(x.s.name)}<span class="txt"><span class="name">${esc(x.s.name)}</span><span class="sub">${esc(c ? c.name : '')}</span></span><span class="tag ${x.red ? 'red' : ''}">${esc(x.tag)}</span></button>`; }).join('')}${list.length > 6 ? `<button class="btn small" data-act="dashMonth">عرض الكل (${list.length})</button>` : ''}</div></div>`;
+  // تذكيرات
+  const rem = [], hp = hParts(t);
+  if (new Date(t + 'T12:00:00').getDay() === 4) rem.push(['dashWeek', 'اليوم الخميس: جهّزي استمارة الحصر الأسبوعي وسلّميها للوكيلة']);
+  if (hp && hp.d >= 27) rem.push(['dashMonth', 'نهاية الشهر الهجري: جهّزي حصر كثيرات الغياب']);
+  if (!S.prefs.termStart) rem.push(['settings', 'حدّدي تاريخ بداية الفترة الدراسية ليُحسب رقم الأسبوع']);
+  if (!S.school.wakila) rem.push(['settings', 'أضيفي اسم الوكيلة الطلابية ليظهر في الاستمارات']);
+  if (rem.length) h += `<div class="dalerts">${rem.map(([a, l]) => `<button class="dremind" data-act="${a}"><span>${esc(l)}</span>${IC.chev}</button>`).join('')}</div>`;
+  return h + '</section>';
+}
 function classItem(c) {
   const st = stuOf(c.id), ids = new Set(st.map(s => s.id)), n = S.excuses.filter(e => ids.has(e.studentId)).length, w = st.some(s => totalDays(s.id) >= alertDays());
   return `<button class="ccard" data-act="openClass" data-id="${c.id}"><span class="ic">${IC.users}</span><span class="name">${esc(c.name)}</span>${S.school.school2 ? `<span class="sub">${esc(schoolOf(c))}</span>` : ''}<span class="meta"><span class="count">${st.length} طالبة</span><span class="count ${w ? 'warn' : n ? 'has' : ''}">${n} عذر</span></span></button>`;
@@ -659,7 +755,7 @@ function homeList() {
   if (!n && !qd) {
     if (S.demo) h += `<div class="notice"><span>تعملين الآن على بيانات وهمية للتجربة. جرّبي كل شيء بحرية، ثم امسحيها قبل إدخال بيانات حقيقية.</span><button class="btn small" data-act="askWipeDemo">مسح البيانات الوهمية</button></div>`;
     if (!S.school.school) h += `<button class="btn small" data-act="settings">${IC.school} أضيفي اسم المدرسة ليظهر في المطبوعات</button>`;
-    if (S.classes.length) { const t = todayISO(), done = S.classes.filter(c => attOf(t, c.id)).length; h += `<button class="btn" data-act="openAtt">${IC.att} تحضير اليوم: ${isWeekend(t) ? 'عطلة' : done + ' من ' + S.classes.length + ' فصول'}</button>`; }
+    h += dashHTML();
     const lb = S.lastBackup;
     const bd = backupDays();
     if (bd > 0 && !S.demo && S.excuses.length && (!lb || Date.now() - lb > bd * 864e5)) h += `<div class="notice"><span>${lb ? 'مرّ أكثر من ' + periodWord(bd) + ' على آخر نسخة احتياطية.' : 'لم تُحفظ أي نسخة احتياطية بعد.'} احفظي نسخة الآن حتى لا تضيع البيانات إن تغيّر الجوال.</span><button class="btn small" data-act="backup">حفظ نسخة احتياطية</button></div>`;
@@ -682,25 +778,47 @@ function qsList() {
   const ss = S.students.filter(s => !n || norm(s.name).includes(n)).sort((a, b) => a.name.localeCompare(b.name, 'ar')).slice(0, 40);
   b.innerHTML = ss.length ? `<div class="list">${ss.map(s => { const c = cls(s.classId); return `<button class="item" data-act="pickStudent" data-id="${s.id}"><span class="txt"><span class="name">${esc(s.name)}</span><span class="sub">${esc(c ? c.name : '')}</span></span>${IC.plus}</button>`; }).join('')}</div>` : '<div class="empty">لا توجد طالبة بهذا الاسم. أضيفيها أولاً من داخل فصلها.</div>';
 }
+let cq = '';
+const monthAbs = sid => { const t = todayISO(), f = hijriMonthStart(t); return S.att.filter(a => a.date >= f && a.date <= t && a.absent && a.absent[sid]).length; };
+function studentRow(s, i) {
+  const n = exOf(s.id).length, d = totalDays(s.id), m = monthAbs(s.id), al = alertDays();
+  const sub = n ? `<span class="sub ${d >= al ? 'warn' : 'has'}">${n === 1 ? 'عذر واحد' : n === 2 ? 'عذران' : n + ' أعذار'} · ${dayWord(d)}</span>` : m ? `<span class="sub warn">غابت ${dayWord(m)} هذا الشهر</span>` : `<span class="sub">لا توجد أعذار</span>`;
+  return `<button class="srow" data-act="openStudent" data-id="${s.id}"><span class="num">${i + 1}</span>${avatar(s.name)}<span class="txt"><span class="name">${esc(s.name)}</span>${sub}</span>${IC.chev}</button>`;
+}
+function clsList() {
+  const b = $('#clsList'), top = nav[nav.length - 1]; if (!b || top.v !== 'cls') return;
+  const all = stuOf(top.id), n = norm(cq), st = n ? all.map((s, i) => [s, i]).filter(([s]) => norm(s.name).includes(n) || (s.nid && s.nid.includes(toLatin(cq).trim()))) : all.map((s, i) => [s, i]);
+  b.innerHTML = all.length ? (st.length ? `<div class="srows">${st.map(([s, i]) => studentRow(s, i)).join('')}</div>` : `<div class="empty"><span>لا توجد طالبة بهذا الاسم في الفصل.</span></div>`) : `<div class="empty">${IC.userplus}<span>لا توجد طالبات في هذا الفصل. اضغطي «إضافة طالبات» والصقي القائمة كاملة أو ارفعي ملف الأسماء.</span></div>`;
+}
 function vClass(top) {
   const c = cls(top.id); if (!c) return back();
+  if (top.cq !== true) { cq = ''; top.cq = true; }
   const st = stuOf(c.id); $('#barTitle').textContent = c.name;
-  const ids = new Set(st.map(s => s.id)), ex = S.excuses.filter(e => ids.has(e.studentId));
-  $('#view').innerHTML = `<div class="pagehead"><span class="ic">${IC.users}</span><div class="head"><h2>${esc(c.name)}</h2><p class="sub">${st.length} طالبة · ${ex.length} عذر · ${dayWord(ex.reduce((a, e) => a + daysOf(e), 0))} غياب</p></div></div>
+  const ids = new Set(st.map(s => s.id)), ex = S.excuses.filter(e => ids.has(e.studentId)), t = todayISO(), f = hijriMonthStart(t);
+  const mAbs = S.att.filter(a => a.classId === c.id && a.date >= f && a.date <= t).reduce((n, a) => n + Object.keys(a.absent || {}).filter(id => ids.has(id)).length, 0);
+  $('#view').innerHTML = `<section class="hero phero"><div class="top"><span class="cic">${IC.users}</span><div class="head"><h2>${esc(c.name)}</h2>${schoolOf(c) ? `<span class="pill">${esc(schoolOf(c))}</span>` : ''}</div></div>
+      <div class="hstats"><div class="hstat"><b>${st.length}</b><span>طالبة</span></div><div class="hstat"><b>${ex.length}</b><span>عذر</span></div><div class="hstat"><b>${mAbs}</b><span>غياب هذا الشهر</span></div></div></section>
+    <div class="actions"><button class="btn primary grow" data-act="bulk">${IC.userplus} إضافة طالبات</button><button class="btn grow" data-act="pdfClass">${IC.pdf} أعذار الفصل PDF</button></div>
+    ${st.length > 6 ? `<div class="search"><div class="searchbox">${IC.search}<input id="cq" type="search" placeholder="ابحثي عن طالبة في الفصل" value="${esc(cq)}" aria-label="بحث داخل الفصل"></div></div>` : ''}
+    <div id="clsList"></div>
     ${S.school.school2 ? `<label class="field">مدرسة الفصل<select id="clsSchool"><option value="1" ${c.school !== 2 ? 'selected' : ''}>${esc(S.school.school || 'المدرسة الأساسية')}</option><option value="2" ${c.school === 2 ? 'selected' : ''}>${esc(S.school.school2)}</option></select></label>` : ''}
-    <div class="actions"><button class="btn primary grow" data-act="bulk">${IC.userplus} إضافة طالبات</button><button class="btn grow" data-act="pdfClass">${IC.pdf} PDF أعذار الفصل</button></div>
-    ${st.length ? `<div class="tiles">${st.map(folderTile).join('')}</div>` : `<div class="empty">${IC.userplus}<span>لا توجد طالبات في هذا الفصل. اضغطي «إضافة طالبات» والصقي القائمة كاملة أو ارفعي ملف الأسماء.</span></div>`}
-    <div class="actions"><button class="btn small" data-act="renameClass">${IC.edit} تعديل اسم الفصل</button><button class="btn small danger" data-act="askDelClass">${IC.trash} حذف الفصل</button></div>`;
+    <div class="srows"><button class="mrow" data-act="renameClass">${IC.edit}<span>تعديل اسم الفصل</span></button><button class="mrow danger" data-act="askDelClass">${IC.trash}<span>حذف الفصل</span></button></div>`;
+  clsList();
 }
 function vStudent(top) {
   const s = stu(top.id); if (!s) return back();
-  const c = cls(s.classId), ex = exOf(s.id), d = totalDays(s.id), al = alertDays(); $('#barTitle').textContent = s.name;
-  $('#view').innerHTML = `<div class="pagehead">${avatar(s.name)}<div class="head"><h2>${esc(s.name)}</h2><p class="sub">${esc(c ? c.name : '')} · ${ex.length} عذر · ${dayWord(d)} غياب</p><p class="sub">السجل المدني: ${s.nid ? bdi(s.nid) : '<span>لم يُسجّل</span>'}</p><p class="sub">جوال ولي الأمر: ${s.phone ? bdi(s.phone) : '<span>لم يُسجّل</span>'}</p></div></div>
-    ${s.phone ? `<div class="actions"><a class="btn small grow" href="tel:${esc(s.phone)}">${IC.phone} اتصال</a><a class="btn small grow" href="https://wa.me/${esc(waNum(s.phone))}?text=${encodeURIComponent('السلام عليكم، نفيدكم من ' + (schoolOf(c) || 'المدرسة') + ' بخصوص الطالبة ' + s.name + '.')}" target="_blank" rel="noopener">${IC.share} واتساب</a></div>` : ''}
+  const c = cls(s.classId), ex = exOf(s.id), d = totalDays(s.id), al = alertDays(), m = monthAbs(s.id); $('#barTitle').textContent = s.name;
+  const msg = encodeURIComponent('السلام عليكم، نفيدكم من ' + (schoolOf(c) || 'المدرسة') + ' بخصوص الطالبة ' + s.name + '.');
+  $('#view').innerHTML = `<section class="hero phero"><div class="top">${avatar(s.name)}<div class="head"><h2>${esc(s.name)}</h2><span class="pill">${esc(c ? c.name : '')}</span></div></div>
+      <div class="hstats"><div class="hstat"><b>${ex.length}</b><span>عذر</span></div><div class="hstat"><b>${d}</b><span>يوم بعذر</span></div><div class="hstat"><b>${m}</b><span>غياب هذا الشهر</span></div></div></section>
     ${ex.length && d >= al ? `<div class="notice">تجاوزت الطالبة حد التنبيه: ${dayWord(d)} غياب بعذر (الحد ${al}).</div>` : ''}
-    <div class="actions"><button class="btn primary grow" data-act="newExcuse">${IC.plus} عذر جديد</button><button class="btn grow" data-act="batchExcuse">${IC.img} عدة أعذار دفعة واحدة</button></div><div class="actions">${ex.length ? `<button class="btn grow" data-act="pdfStudent">${IC.pdf} طباعة أو مشاركة الملف (PDF)</button>` : ''}</div>
+    <div class="srows"><div class="inforow"><span class="lbl"><small>السجل المدني</small>${s.nid ? `<b>${bdi(s.nid)}</b>` : '<b class="none">لم يُسجّل</b>'}</span>${s.nid ? `<button class="icon-btn" data-act="copyNid" aria-label="نسخ السجل المدني">${IC.copy || IC.file}</button>` : ''}</div>
+      <div class="inforow"><span class="lbl"><small>جوال ولي الأمر</small>${s.phone ? `<b>${bdi(s.phone)}</b>` : '<b class="none">لم يُسجّل</b>'}</span>${s.phone ? `<a class="icon-btn" href="tel:${esc(s.phone)}" aria-label="اتصال">${IC.phone}</a><a class="icon-btn" href="https://wa.me/${esc(waNum(s.phone))}?text=${msg}" target="_blank" rel="noopener" aria-label="واتساب">${IC.share}</a>` : `<button class="btn small" data-act="renameStudent">${IC.plus} إضافة</button>`}</div></div>
+    <button class="btn primary" data-act="newExcuse">${IC.plus} عذر جديد</button>
+    <button class="btn" data-act="batchExcuse">${IC.img} عدة أعذار دفعة واحدة</button>
+    <div class="sec-h"><h3>الأعذار${ex.length ? ' (' + ex.length + ')' : ''}</h3>${ex.length ? `<button class="btn small" data-act="pdfStudent">${IC.pdf} طباعة PDF</button>` : ''}</div>
     ${ex.length ? `<div class="list">${ex.map(e => excuseItem(e)).join('')}</div>` : `<div class="empty">${IC.file}<span>لا توجد أعذار محفوظة لهذه الطالبة بعد.</span></div>`}
-    <div class="actions"><button class="btn small" data-act="renameStudent">${IC.edit} تعديل البيانات</button><button class="btn small" data-act="moveStudent">${IC.move} نقل لفصل آخر</button><button class="btn small danger" data-act="askDelStudent">${IC.trash} حذف الطالبة</button></div>`;
+    <div class="srows"><button class="mrow" data-act="renameStudent">${IC.edit}<span>تعديل البيانات</span></button><button class="mrow" data-act="moveStudent">${IC.move}<span>نقل لفصل آخر</span></button><button class="mrow danger" data-act="askDelStudent">${IC.trash}<span>حذف الطالبة</span></button></div>`;
 }
 /* ---------- الحضور والغياب ---------- */
 let attDate = null, attDraft = null;
@@ -1146,7 +1264,7 @@ async function pdfFrequent() {
   toast('جارٍ تجهيز الاستمارة…');
   const d = await makeDoc('استمارة حصر الطالبات كثيرات الغياب', rpLabel(), bothSchools()), x = d.x;
   let y = d.page();
-  y = await d.table(y, ['م', 'اسم الطالبة', 'الصف/الشعبة', 'بعذر', 'بدون عذر', 'ملاحظات'], [50, 360, 250, 80, 110], A.frequent.length ? A.frequent.map((o, i) => { const c = cls(o.s.classId); return [String(i + 1), {t:o.s.name, b:true, s:o.s.nid || ''}, c ? c.name : '', String(o.ex), String(o.unex), {t:reasonText(o), wrap:true}]; }) : [['', 'لا توجد طالبة تغيّبت ' + al + ' أيام فأكثر', '', '', '', '']]);
+  y = await d.table(y, ['م', 'اسم الطالبة', 'الصف/الشعبة', 'بعذر', 'بدون عذر', 'ملاحظات'], [50, 360, 250, 80, 110], A.frequent.length ? A.frequent.map((o, i) => { const c = cls(o.s.classId); return [String(i + 1), {t:o.s.name, b:true, s:o.s.nid || ''}, c ? c.name : '', String(o.ex), String(o.unex), 'تم التواصل']; }) : [['', 'لا توجد طالبة تغيّبت ' + al + ' أيام فأكثر', '', '', '', '']]);
   y = await d.note(y, '* تقوم المسؤولة بحصر الطالبات اللاتي تغيّبن ' + al + ' أيام فأكثر خلال الفترة، ويُسلَّم للموجهة الطلابية لدراسة أسباب الغياب.');
   await d.sign(y); await d.flush();
   fileReady('استمارة كثيرات الغياب ' + todayISO() + '.pdf', d.blob(), 'pdf');
@@ -1288,6 +1406,7 @@ const ACT = {
   viewExcuse: el => viewExcuse(el.dataset.id),
   clearSearch: () => { q = ''; qd = ''; vHome(); },
   addClass: () => nameForm('فصل جديد', 'اسم الفصل (مثال: ثاني ثانوي / 3)', '', 'addClass'),
+  copyNid: async () => { const s = stu(topId()); try { await navigator.clipboard.writeText(s.nid); toast('نُسخ السجل المدني'); } catch (e) { toast(s.nid); } },
   renameClass: () => nameForm('تعديل اسم الفصل', 'اسم الفصل', cls(topId()).name, 'renameClass'),
   renameStudent: () => { const s = stu(topId()); nameForm('تعديل بيانات الطالبة', 'اسم الطالبة', s.name, 'renameStudent', s.nid || '', s.phone || ''); },
   bulk: bulkForm,
@@ -1297,6 +1416,9 @@ const ACT = {
   batchExcuse: () => batchForm(),
   openAtt: () => tabTo('att'),
   openAttCls: el => { attDraft = null; go({v:'attcls', id:el.dataset.id}); },
+  dashCls: el => { attDate = todayISO(); attDraft = null; go({v:'attcls', id:el.dataset.id}); },
+  dashWeek: () => { wk = {start:weekStartOf(todayISO()), only3:false}; go({v:'week'}); },
+  dashMonth: () => { rpMode = 'att'; rp = rpPreset('month'); tabTo('report'); },
   hpick: el => { const i = el.parentElement.querySelector('input'); if (i) hpOpen(i); },
   hpPrev: () => { hp.view = hp.prev; hpRender(); }, hpNext: () => { hp.view = hp.next; hpRender(); },
   hpSet: el => hpSetValue(el.dataset.v), hpToday: () => hpSetValue(todayISO()), hpClear: () => hpSetValue(''), hpClose: () => hpClose(),
@@ -1359,6 +1481,7 @@ document.addEventListener('input', e => {
   if (e.target.id === 'attDate') { attDate = e.target.value || todayISO(); attDraft = null; vAtt(); return; }
   if (e.target.id === 'qs') qsList();
   else if (e.target.id === 'q') { q = e.target.value; homeList(); }
+  else if (e.target.id === 'cq') { cq = e.target.value; clsList(); }
   else if (e.target.id === 'qd') { qd = e.target.value; homeList(); }
   else if (e.target.id === 'bulkText') { const en = bulkEntries(), k = en.filter(r => r.nid).length; $('#bulkCount').textContent = en.length + ' اسم' + (k ? ' · ' + k + ' منها مع السجل المدني' : ''); }
   else if (e.target.id === 'exDate' || e.target.id === 'exTo') {
