@@ -211,6 +211,29 @@ body:has(.stickybar) #toast{bottom:calc(156px + env(safe-area-inset-bottom,0px))
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--surface-2)}
 .seg button{min-height:42px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-weight:500}
 .seg button.on{background:var(--surface);color:var(--accent);box-shadow:var(--shadow)}
+/* التاريخ الهجري */
+.hdate{position:relative;display:flex;min-width:0}
+.hbtn{flex:1;min-width:0;min-height:50px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);color:var(--ink);padding:8px 14px;text-align:start;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);font-size:1rem}
+.hbtn svg{color:var(--accent);width:20px;height:20px}
+.hbtn .hlbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hnative{position:absolute;inset-inline-start:10px;bottom:6px;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0;margin:0}
+.brow .hbtn{min-height:44px;box-shadow:none}
+.daynav{display:flex;gap:8px;align-items:stretch}
+.daynav .hdate{flex:1}
+.daynav .hlbl{white-space:normal;line-height:1.45}
+.daynav .icon-btn{width:50px;height:auto;min-height:50px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);color:var(--accent)}
+#hpick{position:fixed;inset:0;z-index:36;background:var(--scrim);display:flex;align-items:center;justify-content:center;padding:16px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.hp-card{background:var(--surface);color:var(--ink);border-radius:24px;padding:16px;width:100%;max-width:360px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;gap:10px}
+.hp-head{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.hp-head h3{font-size:1.05rem;text-align:center;flex:1}
+.hp-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.hp-grid .wd{font-size:.72rem;color:var(--muted);padding-block:2px}
+.hp-day{aspect-ratio:1;max-width:100%;border:0;border-radius:12px;background:transparent;color:var(--ink);font-variant-numeric:tabular-nums;font-size:.95rem;padding:0}
+.hp-day:hover{background:var(--surface-2)}
+.hp-day.we{color:var(--muted)}
+.hp-day.today{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.hp-day.sel{background:var(--accent);color:var(--accent-ink)}
+.hp-g{font-size:.8rem;color:var(--muted);text-align:center;min-height:1.3em}
 /* شريط التنقل السفلي */
 .tabbar{position:fixed;inset:auto 0 0;z-index:20;display:flex;justify-content:space-around;gap:4px;background:color-mix(in srgb,var(--surface) 90%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-top:1px solid var(--line);padding:6px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .tab{flex:1;max-width:160px;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:transparent;color:var(--muted);font-size:.76rem;font-weight:500;padding:4px;min-height:54px}
@@ -237,6 +260,7 @@ body:has(.stickybar) #toast{bottom:calc(156px + env(safe-area-inset-bottom,0px))
     <button class="tab" data-act="settings" data-tab="settings"><span class="pill"><svg viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></span>الإعدادات</button>
   </nav>
   <div id="modal" hidden></div>
+  <div id="hpick" hidden></div>
   <div id="toast" role="status" hidden></div>
 </div>
 
@@ -277,6 +301,9 @@ const IC = {
   shield:'<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>',
   db:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5M3 12a9 3 0 0 0 18 0"/></svg>',
   lock:'<svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  cal:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2.5"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  next:'<svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>',
+  prev:'<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>',
   att:'<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="18" rx="2"/><path d="M9 2h6v4H9zM9 13l2 2 4-4"/></svg>',
   phone:'<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>'
 };
@@ -404,6 +431,26 @@ function attData(from, to) {
     classes:[...byClass.values()].filter(r => r.recs), students, reasons, frequent:students.filter(o => o.abs >= al), disciplined:students.filter(o => o.abs === 0 && o.rec > 0).sort((a, b) => (cls(a.s.classId) || {}).created - (cls(b.s.classId) || {}).created || a.s.name.localeCompare(b.s.name, 'ar'))};
 }
 const reasonText = o => ABS.filter(([k]) => o.reasons[k]).map(([k, l]) => l + ' ' + o.reasons[k]).join('، ');
+/* حقل تاريخ هجري: زر يعرض التاريخ الهجري ويفتح تقويم أم القرى، والقيمة الميلادية محفوظة في حقل مخفي */
+const hlabel = v => v ? esc((dayName(v) ? dayName(v) + ' ' : '') + hijri(v)) : 'اختاري التاريخ';
+const hdate = (id, val, cls) => `<span class="hdate"><button type="button" class="hbtn" data-act="hpick">${IC.cal}<span class="hlbl">${hlabel(val)}</span></button><input ${id ? `id="${id}" ` : ''}class="hnative${cls ? ' ' + cls : ''}" type="date" value="${esc(val || '')}" tabindex="-1" aria-hidden="true"></span>`;
+function hlabelAll() { document.querySelectorAll('.hdate').forEach(h => { const i = h.querySelector('input'), l = h.querySelector('.hlbl'); if (i && l) l.innerHTML = hlabel(i.value); }); }
+let hp = null;
+function hpOpen(input) { hp = {input, view:hijriMonthStart(input.value || todayISO())}; hpRender(); $('#hpick').hidden = false; }
+function hpClose() { $('#hpick').hidden = true; $('#hpick').innerHTML = ''; hp = null; }
+function hpRender() {
+  const start = hp.view, p0 = hParts(start), days = []; let d = start;
+  for (let i = 0; i < 31; i++) { const p = hParts(d); if (i > 0 && (!p || p.d === 1)) break; days.push(d); d = addDays(d, 1); }
+  hp.next = d; hp.prev = hijriMonthStart(addDays(start, -1));
+  const sel = hp.input.value, t = todayISO(), off = new Date(start + 'T12:00:00').getDay();
+  const W = ['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+  $('#hpick').innerHTML = `<div class="hp-card" role="dialog" aria-modal="true" aria-label="اختيار التاريخ الهجري">
+    <div class="hp-head"><button type="button" class="icon-btn" data-act="hpPrev" aria-label="الشهر السابق">${IC.prev}</button><h3>${p0 ? esc(p0.m + ' ' + p0.y) + ' هـ' : ''}</h3><button type="button" class="icon-btn" data-act="hpNext" aria-label="الشهر التالي">${IC.next}</button></div>
+    <div class="hp-grid">${W.map(w => `<span class="wd">${w}</span>`).join('')}${'<span></span>'.repeat(off)}${days.map(x => { const w = new Date(x + 'T12:00:00').getDay(); return `<button type="button" class="hp-day${w === 5 || w === 6 ? ' we' : ''}${x === t ? ' today' : ''}${x === sel ? ' sel' : ''}" data-act="hpSet" data-v="${x}" aria-label="${esc(hijri(x))}">${hParts(x).d}</button>`; }).join('')}</div>
+    <p class="hp-g">${sel ? 'المختار: ' + esc(hlabel(sel)) + ' · يوافق ' + esc(sel) : ''}</p>
+    <div class="actions"><button type="button" class="btn small grow" data-act="hpToday">اليوم</button>${hp.input.required ? '' : '<button type="button" class="btn small grow" data-act="hpClear">مسح</button>'}<button type="button" class="btn small grow" data-act="hpClose">إغلاق</button></div></div>`;
+}
+function hpSetValue(v) { const i = hp.input; i.value = v; hpClose(); i.dispatchEvent(new Event('input', {bubbles:true})); i.dispatchEvent(new Event('change', {bubbles:true})); hlabelAll(); }
 const backupDays = () => S.prefs.backupDays == null ? 7 : Number(S.prefs.backupDays);
 const periodWord = n => n === 7 ? 'أسبوع' : n === 14 ? 'أسبوعين' : n === 30 ? 'شهر' : n + ' يوماً';
 const lockMin = () => S.prefs.autoLock == null ? 5 : Number(S.prefs.autoLock);
@@ -434,7 +481,8 @@ function confirmBox(title, msg, okLabel, cb) {
 function go(v) { armBack(); nav.push(v); render(); window.scrollTo(0, 0); }
 window.addEventListener('popstate', () => {
   if (!HIST) return; guard = false;
-  if (!$('#modal').hidden) { closeModal(); armBack(); }
+  if (!$('#hpick').hidden) { hpClose(); armBack(); }
+  else if (!$('#modal').hidden) { closeModal(); armBack(); }
   else if (unlocked && nav.length > 1) { back(); armBack(); }
   else if (unlocked) toast('اضغطي رجوع مرة أخرى للخروج');
 });
@@ -576,7 +624,7 @@ function vHome() {
       <div class="hstats"><button class="hstat" data-act="openReport"><b>${today}</b><span>أعذار اليوم</span></button><button class="hstat" data-act="openReport"><b>${month}</b><span>هذا الشهر</span></button><button class="hstat" data-act="openReport"><b>${alerts}</b><span>تنبيهات</span></button></div></section>
     <section class="search">
       <div class="searchbox">${IC.search}<input id="q" type="search" placeholder="ابحثي بالاسم أو السجل المدني أو الفصل" value="${esc(q)}" aria-label="بحث باسم الطالبة أو الفصل"></div>
-      <div class="daterow"><label class="field">بحث بتاريخ العذر<input id="qd" type="date" value="${esc(qd)}"></label>
+      <div class="daterow"><div class="field">بحث بتاريخ العذر${hdate('qd', qd)}</div>
       <button class="btn" data-act="clearSearch">مسح البحث</button></div></section><div id="homeList" style="display:flex;flex-direction:column;gap:16px"></div>`;
   homeList();
 }
@@ -662,7 +710,7 @@ function vAtt() {
   const recs = S.classes.map(c => ({c, st:stuOf(c.id).length, rec:attOf(attDate, c.id)}));
   const done = recs.filter(r => r.rec), reg = done.reduce((a, r) => a + r.st, 0), abs = done.reduce((a, r) => a + Object.keys(r.rec.absent || {}).length, 0);
   $('#view').innerHTML = `<div class="pagehead"><span class="ic">${IC.att}</span><div class="head"><h2>تحضير ${esc(dayName(attDate))}</h2><p class="sub">${esc(hijri(attDate))} · ${esc(attDate)}</p></div></div>
-    <label class="field">تاريخ التحضير<input id="attDate" type="date" value="${esc(attDate)}"></label>
+    <div class="field">تاريخ التحضير<div class="daynav"><button class="icon-btn" data-act="attPrevDay" aria-label="اليوم السابق">${IC.prev}</button>${hdate('attDate', attDate)}<button class="icon-btn" data-act="attNextDay" aria-label="اليوم التالي">${IC.next}</button></div></div>
     ${isWeekend(attDate) ? '<div class="notice">هذا اليوم عطلة نهاية الأسبوع.</div>' : ''}
     <div class="stats"><div class="stat"><b>${done.length}/${recs.length}</b><span>فصول محضّرة</span></div><div class="stat"><b>${reg - abs}</b><span>حاضرة</span></div><div class="stat"><b>${abs}</b><span>غائبة</span></div></div>
     ${recs.length ? `<div class="list">${recs.map(r => { const n = r.rec ? Object.keys(r.rec.absent || {}).length : 0; return `<button class="item" data-act="openAttCls" data-id="${r.c.id}"><span class="txt"><span class="name">${esc(r.c.name)}</span><span class="sub">${r.st} طالبة</span></span><span class="count ${r.rec ? (n ? 'warn' : 'has') : ''}">${r.rec ? (n ? n + ' غائبة' : 'الكل حاضرات') : 'لم يُحضَّر'}</span>${IC.chev}</button>`; }).join('')}</div>` : '<div class="empty">' + IC.users + '<span>أضيفي الفصول أولاً من الرئيسية.</span></div>'}
@@ -674,7 +722,9 @@ function vAttCls(top) {
   const rec = attOf(attDate, c.id);
   if (!attDraft || attDraft.cid !== c.id || attDraft.date !== attDate) attDraft = {cid:c.id, date:attDate, absent:rec ? JSON.parse(JSON.stringify(rec.absent || {})) : {}};
   $('#barTitle').textContent = 'تحضير ' + c.name;
-  $('#view').innerHTML = `<div class="pagehead"><span class="ic">${IC.users}</span><div class="head"><h2>${esc(c.name)}</h2><p class="sub">${esc(dayName(attDate))} ${esc(hijri(attDate))}${rec ? ' · محفوظ' : ''}</p><p class="sub" id="attCount"></p></div></div>
+  $('#view').innerHTML = `<div class="pagehead"><span class="ic">${IC.users}</span><div class="head"><h2>${esc(c.name)}</h2><p class="sub">${rec ? 'تحضير محفوظ لهذا اليوم' : 'لم يُحضَّر بعد'}</p><p class="sub" id="attCount"></p></div></div>
+    <div class="field">تاريخ التحضير<div class="daynav"><button class="icon-btn" data-act="attPrevDay" aria-label="اليوم السابق">${IC.prev}</button>${hdate('attDateC', attDate)}<button class="icon-btn" data-act="attNextDay" aria-label="اليوم التالي">${IC.next}</button></div></div>
+    ${isWeekend(attDate) ? '<div class="notice">هذا اليوم عطلة نهاية الأسبوع.</div>' : ''}
     <p class="sub">كل الطالبات حاضرات افتراضياً. اضغطي على اسم الغائبة، ثم اختاري سبب الغياب.</p>
     <div class="arows" id="attRows"></div>
     <div class="stickybar"><button class="btn" data-act="allPresent">الكل حاضرات</button><button class="btn primary" data-act="saveAtt">حفظ التحضير</button></div>`;
@@ -707,7 +757,7 @@ function vWeek() {
   const term = S.prefs.term || 1, ts = S.prefs.termStart, n = weekNumOf(wk.start), {A, rows} = weekData(wk.start), list = wk.only3 ? rows.filter(o => o.abs >= 3) : rows;
   let weekSel;
   if (ts) { const first = weekStartOf(ts), max = Math.max(16, n); weekSel = `<label class="field">الأسبوع<select id="wkNum">${Array.from({length:max}, (_, i) => { const st = addDays(first, i * 7); return `<option value="${st}" ${st === wk.start ? 'selected' : ''}>الأسبوع ${i + 1} · ${esc(hijri(st))}</option>`; }).join('')}</select></label>`; }
-  else weekSel = `<label class="field">اختاري أي يوم من الأسبوع<input id="wkDate" type="date" value="${esc(wk.start)}"></label>`;
+  else weekSel = `<div class="field">اختاري أي يوم من الأسبوع${hdate('wkDate', wk.start)}</div>`;
   $('#view').innerHTML = `<div class="pagehead"><span class="ic">${IC.file}</span><div class="head"><h2>استمارة الحصر الأسبوعي</h2><p class="sub">الفترة ${TERMS[term - 1]}${n > 0 ? ' · الأسبوع ' + n : ''} · من ${esc(hijri(wk.start))} إلى ${esc(hijri(addDays(wk.start, 4)))}</p></div></div>
     <div class="daterow"><label class="field">الفترة الدراسية<select id="wkTerm">${TERMS.map((t, i) => `<option value="${i + 1}" ${term === i + 1 ? 'selected' : ''}>${t}</option>`).join('')}</select></label>${weekSel}</div>
     ${ts ? '' : '<div class="notice">حددي «تاريخ بداية الفترة الدراسية» من الإعدادات، ليُحسب رقم الأسبوع تلقائياً وتختاريه من القائمة.</div>'}
@@ -745,7 +795,7 @@ function vReport() {
   $('#view').innerHTML = `<div class="head"><h2>التقارير والإحصائيات</h2><p class="sub" id="rpLabel"></p></div>
     <div class="seg" role="tablist"><button class="${rpMode === 'ex' ? 'on' : ''}" data-act="rpMode" data-m="ex" role="tab">الأعذار</button><button class="${rpMode === 'att' ? 'on' : ''}" data-act="rpMode" data-m="att" role="tab">الحضور والغياب</button></div>
     <div class="chips" id="rpChips">${P.map(([k, l]) => `<button class="chipbtn" data-act="rpPreset" data-k="${k}">${l}</button>`).join('')}</div>
-    <div class="daterow"><label class="field">من تاريخ<input id="rpFrom" type="date" value="${esc(rp.from)}"></label><label class="field">إلى تاريخ<input id="rpTo" type="date" value="${esc(rp.to)}"></label></div>
+    <div class="daterow"><div class="field">من تاريخ${hdate('rpFrom', rp.from)}</div><div class="field">إلى تاريخ${hdate('rpTo', rp.to)}</div></div>
     <div id="rpBody" style="display:flex;flex-direction:column;gap:16px"></div>`;
   rpBody();
 }
@@ -800,7 +850,7 @@ async function vSettings() {
     <label class="field">نبّهيني إذا وصلت أيام غياب الطالبة بعذر إلى<input id="pfAlert" type="number" min="1" max="99" inputmode="numeric" value="${alertDays()}"></label>
     <label class="field">مظهر التطبيق<select id="pfTheme">${[['auto','تلقائي حسب الجوال'],['light','فاتح'],['dark','داكن']].map(([v, l]) => `<option value="${v}" ${(S.prefs.theme || 'auto') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
     <label class="field">قفل التطبيق تلقائياً بعد تركه<select id="pfLock">${[[1,'دقيقة واحدة'],[5,'5 دقائق'],[15,'15 دقيقة'],[0,'بدون قفل تلقائي']].map(([v, l]) => `<option value="${v}" ${lockMin() === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
-    <div class="daterow"><label class="field">الفترة الدراسية الحالية<select id="pfTerm">${TERMS.map((t, i) => `<option value="${i + 1}" ${(S.prefs.term || 1) === i + 1 ? 'selected' : ''}>${t}</option>`).join('')}</select></label><label class="field">تاريخ بداية الفترة<input id="pfTermStart" type="date" value="${esc(S.prefs.termStart || '')}"></label></div>
+    <div class="daterow"><label class="field">الفترة الدراسية الحالية<select id="pfTerm">${TERMS.map((t, i) => `<option value="${i + 1}" ${(S.prefs.term || 1) === i + 1 ? 'selected' : ''}>${t}</option>`).join('')}</select></label><div class="field">تاريخ بداية الفترة${hdate('pfTermStart', S.prefs.termStart || '')}</div></div>
     <label class="field">تذكيري بالنسخة الاحتياطية<select id="pfBackup">${[[7,'كل أسبوع'],[14,'كل أسبوعين'],[30,'كل شهر'],[0,'بدون تذكير']].map(([v, l]) => `<option value="${v}" ${backupDays() === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
     <button class="btn primary" type="submit">حفظ</button></form></section>
     <section class="group"><h2>${IC.cloud} النسخ الاحتياطي</h2>
@@ -874,7 +924,7 @@ function excuseForm(e, defCat) {
   const s = stu(nav[nav.length - 1].id), from = e ? e.date : todayISO(), to = e ? endOf(e) : from;
   openModal(sheetHead(e ? 'تعديل العذر' : 'عذر جديد') + `<form id="exForm" data-id="${e ? e.id : ''}">
     <p class="sub">${esc(s ? s.name : '')}</p>
-    <div class="daterow"><label class="field">من تاريخ<input id="exDate" type="date" value="${esc(from)}" required></label><label class="field">إلى تاريخ<input id="exTo" type="date" value="${esc(to)}"></label></div>
+    <div class="daterow"><div class="field">من تاريخ${hdate('exDate', from)}</div><div class="field">إلى تاريخ${hdate('exTo', to)}</div></div>
     <label class="field">عدد أيام الغياب<input id="exDays" type="number" min="1" max="200" inputmode="numeric" value="${e ? daysOf(e) : schoolDays(from, to)}"><span class="sub">تُحسب أيام الدوام تلقائياً بدون الجمعة والسبت، ويمكنك تعديلها.</span></label>
     <label class="field">التصنيف<select id="exCat">${CATS.map(c => `<option value="${c[0]}" ${(e ? e.category : defCat) === c[0] ? 'selected' : ''}>${c[1]}</option>`).join('')}</select></label>
     <label class="field">ملاحظات<textarea id="exNotes" maxlength="500" placeholder="مثال: تقرير طبي من مستشفى الملك فهد">${esc(e ? e.notes : '')}</textarea></label>
@@ -908,7 +958,7 @@ function syncBatch() { if (!bp) return; document.querySelectorAll('#bRows .brow'
 function renderBatch() {
   const b = $('#bRows'); if (!b || !bp) return;
   b.innerHTML = bp.rows.length ? bp.rows.map((o, i) => `<div class="brow"><span class="bnum">${i + 1}</span><img class="thumb" src="${o.thumb}" alt="عذر ${i + 1}"><div class="bf">
-      <div class="daterow"><label class="field">تاريخ العذر<input class="bDate" type="date" value="${esc(o.date)}"></label><label class="field days">الأيام<input class="bDays" type="number" min="1" max="200" inputmode="numeric" value="${o.days}"></label></div>
+      <div class="daterow"><div class="field">تاريخ العذر${hdate(null, o.date, 'bDate')}</div><label class="field days">الأيام<input class="bDays" type="number" min="1" max="200" inputmode="numeric" value="${o.days}"></label></div>
       <select class="bCat" aria-label="التصنيف">${catOpts(o.cat)}</select>
       <input class="bNote" type="text" maxlength="200" placeholder="ملاحظة (اختياري)" value="${esc(o.notes)}" style="min-height:42px;border:1px solid var(--line);border-radius:12px;padding:6px 12px;background:var(--surface);color:var(--ink)">
     </div><button type="button" class="ph-x" data-act="rmBatch" data-i="${i}" aria-label="إزالة العذر ${i + 1}">${IC.x}</button></div>`).join('') : '<div class="empty">' + IC.img + '<span>لم تُختر صور بعد.</span></div>';
@@ -1247,6 +1297,11 @@ const ACT = {
   batchExcuse: () => batchForm(),
   openAtt: () => tabTo('att'),
   openAttCls: el => { attDraft = null; go({v:'attcls', id:el.dataset.id}); },
+  hpick: el => { const i = el.parentElement.querySelector('input'); if (i) hpOpen(i); },
+  hpPrev: () => { hp.view = hp.prev; hpRender(); }, hpNext: () => { hp.view = hp.next; hpRender(); },
+  hpSet: el => hpSetValue(el.dataset.v), hpToday: () => hpSetValue(todayISO()), hpClear: () => hpSetValue(''), hpClose: () => hpClose(),
+  attPrevDay: () => { let d = addDays(attDate || todayISO(), -1); while (isWeekend(d)) d = addDays(d, -1); attDate = d; attDraft = null; render(); },
+  attNextDay: () => { let d = addDays(attDate || todayISO(), 1); while (isWeekend(d)) d = addDays(d, 1); attDate = d; attDraft = null; render(); },
   openWeek: () => { if (!wk) wk = {start:weekStartOf(attDate || todayISO()), only3:false}; go({v:'week'}); },
   wkOnly: el => { wk.only3 = el.dataset.v === '1'; vWeek(); },
   pdfWeek: () => pdfWeek(),
@@ -1271,7 +1326,7 @@ const ACT = {
   pdfDate: () => exportPDF('أعذار يوم ' + qd, hijri(qd), searchExcuses(), true),
   pdfReport: () => reportPDF(),
   openReport: () => tabTo('report'),
-  rpPreset: el => { rp = rpPreset(el.dataset.k); const f = $('#rpFrom'), t = $('#rpTo'); if (f) f.value = rp.from; if (t) t.value = rp.to; rpBody(); },
+  rpPreset: el => { rp = rpPreset(el.dataset.k); const f = $('#rpFrom'), t = $('#rpTo'); if (f) f.value = rp.from; if (t) t.value = rp.to; hlabelAll(); rpBody(); },
   rmPhoto: el => { if (!fp) return; const p = fp.list.splice(+el.dataset.i, 1)[0]; if (p && p.id) fp.removed.push(p.id); renderFormPhotos(); },
   shareExcuse: () => doShare(shareFiles, shareText),
   shareLast: () => { const lf = lastFile; if (!lf) return; return doShare([lf.file]).then(ok => { if (ok) { if (lf.kind === 'backup') markBackup(); closeModal(); render(); } }); },
@@ -1292,11 +1347,14 @@ document.addEventListener('visibilitychange', () => {
   hiddenAt = 0;
 });
 document.addEventListener('click', e => {
+  if (e.target.id === 'hpick') return hpClose();
   if (e.target.id === 'modal') return closeModal();
   const el = e.target.closest('[data-act]'); if (!el || !ACT[el.dataset.act]) return;
   Promise.resolve(ACT[el.dataset.act](el)).catch(err => { console.error(err); toast('حدث خطأ غير متوقع، أعيدي المحاولة'); });
 });
 document.addEventListener('input', e => {
+  if (e.target.classList && e.target.classList.contains('hnative')) { const l = e.target.parentElement.querySelector('.hlbl'); if (l) l.innerHTML = hlabel(e.target.value); }
+  if (e.target.id === 'attDateC') { attDate = e.target.value || todayISO(); attDraft = null; render(); return; }
   if (e.target.id === 'wkDate') { wk.start = weekStartOf(e.target.value || todayISO()); vWeek(); return; }
   if (e.target.id === 'attDate') { attDate = e.target.value || todayISO(); attDraft = null; vAtt(); return; }
   if (e.target.id === 'qs') qsList();
@@ -1305,7 +1363,7 @@ document.addEventListener('input', e => {
   else if (e.target.id === 'bulkText') { const en = bulkEntries(), k = en.filter(r => r.nid).length; $('#bulkCount').textContent = en.length + ' اسم' + (k ? ' · ' + k + ' منها مع السجل المدني' : ''); }
   else if (e.target.id === 'exDate' || e.target.id === 'exTo') {
     const a = $('#exDate').value; let b = $('#exTo').value;
-    if (a && (!b || b < a)) { $('#exTo').value = a; b = a; }
+    if (a && (!b || b < a)) { $('#exTo').value = a; b = a; hlabelAll(); }
     if (a) $('#exDays').value = schoolDays(a, b);
   }
   else if (e.target.id === 'rpFrom' || e.target.id === 'rpTo') { rp = {k:'custom', from:$('#rpFrom').value, to:$('#rpTo').value}; rpBody(); }
