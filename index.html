@@ -258,6 +258,7 @@ main.wrap{padding-block:18px calc(104px + env(safe-area-inset-bottom,0px));displ
 .exhint{font-size:.8rem;color:var(--ok)}
 .stickybar{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:5;display:flex;gap:10px;padding:10px;margin-inline:-6px;border-radius:20px;background:color-mix(in srgb,var(--bg) 85%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .stickybar .btn{flex:1}
+.amode{display:grid;grid-template-columns:1fr 1fr;gap:10px}.amode .chipbtn{min-height:46px;font-weight:600}
 body:has(.stickybar) #toast{bottom:calc(156px + env(safe-area-inset-bottom,0px))}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--surface-2)}
 .seg button{min-height:42px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-weight:500}
@@ -843,9 +844,10 @@ function vAttCls(top) {
   $('#view').innerHTML = `<div class="pagehead"><span class="ic">${IC.users}</span><div class="head"><h2>${esc(c.name)}</h2><p class="sub">${rec ? 'تحضير محفوظ لهذا اليوم' : 'لم يُحضَّر بعد'}</p><p class="sub" id="attCount"></p></div></div>
     <div class="field">تاريخ التحضير<div class="daynav"><button class="icon-btn" data-act="attPrevDay" aria-label="اليوم السابق">${IC.prev}</button>${hdate('attDateC', attDate)}<button class="icon-btn" data-act="attNextDay" aria-label="اليوم التالي">${IC.next}</button></div></div>
     ${isWeekend(attDate) ? '<div class="notice">هذا اليوم عطلة نهاية الأسبوع.</div>' : ''}
-    <p class="sub">كل الطالبات حاضرات افتراضياً. اضغطي على اسم الغائبة، ثم اختاري سبب الغياب.</p>
+    <div class="amode"><button class="chipbtn" data-act="allPresent">الكل حاضرات</button><button class="chipbtn" data-act="allAbsent">الكل غائبات</button></div>
+    <p class="sub">اضغطي على اسم الطالبة لتبديلها بين حاضرة وغائبة. إذا كان الغياب كثيراً: اضغطي «الكل غائبات» ثم اضغطي على الحاضرات فقط.</p>
     <div class="arows" id="attRows"></div>
-    <div class="stickybar"><button class="btn" data-act="allPresent">الكل حاضرات</button><button class="btn primary" data-act="saveAtt">حفظ التحضير</button></div>`;
+    <div class="stickybar"><button class="btn primary" data-act="saveAtt">حفظ التحضير</button></div>`;
   renderAttRows();
 }
 function renderAttRows() {
@@ -1430,7 +1432,8 @@ const ACT = {
   openAttReport: () => { rpMode = 'att'; if (!rp || rp.k === 'all') rp = rpPreset('week'); tabTo('report'); },
   rpMode: el => { rpMode = el.dataset.m; vReport(); },
   toggleAbs: el => { if (!attDraft) return; const id = el.dataset.id; if (attDraft.absent[id]) delete attDraft.absent[id]; else { const ex = excuseOn(id, attDraft.date); attDraft.absent[id] = {reason:ex ? (CAT2ABS[ex.category] || 'other') : 'none'}; } const y = window.scrollY; renderAttRows(); window.scrollTo(0, y); },
-  allPresent: () => { if (!attDraft) return; attDraft.absent = {}; renderAttRows(); },
+  allPresent: () => { if (!attDraft) return; attDraft.absent = {}; renderAttRows(); toast('كل الطالبات حاضرات'); },
+  allAbsent: () => { if (!attDraft) return; stuOf(attDraft.cid).forEach(s => { if (!attDraft.absent[s.id]) { const ex = excuseOn(s.id, attDraft.date); attDraft.absent[s.id] = {reason:ex ? (CAT2ABS[ex.category] || 'other') : 'none'}; } }); renderAttRows(); toast('غُيّبت كل الطالبات. اضغطي الآن على الحاضرات فقط'); },
   saveAtt: async () => { if (!attDraft) return; const rec = {id:attId(attDraft.date, attDraft.cid), date:attDraft.date, classId:attDraft.cid, absent:attDraft.absent, takenAt:Date.now()}; await db.put('att', rec); S.att = S.att.filter(a => a.id !== rec.id).concat(rec); const n = Object.keys(rec.absent).length; attDraft = null; back(); toast('حُفظ التحضير' + (n ? ' · ' + n + ' غائبة' : ' · الكل حاضرات')); try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {} },
   pdfDaily: () => pdfDaily(), pdfFrequent: () => pdfFrequent(), pdfDisc: () => pdfDisc(), pdfAttRep: () => pdfAttRep(),
   rmBatch: el => { if (!bp) return; syncBatch(); bp.rows.splice(+el.dataset.i, 1); renderBatch(); },
