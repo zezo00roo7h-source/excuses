@@ -15,7 +15,7 @@
   --bg:#FFF6F9; --surface:#FFFFFF; --surface-2:#FBEDF3; --ink:#2B1822; --muted:#84697A; --line:#F2DFE7;
   --accent:#C2376F; --accent-2:#8C1F52; --accent-ink:#FFFFFF; --accent-soft:#FCE3EE; --gold:#B98A3E;
   --danger:#B3403A; --warn-bg:#FFF1DC; --warn-ink:#7A5310;
-  --c-medical:#C2376F; --c-appt:#4F63B8; --c-family:#8A4F9E; --c-death:#55686B; --c-travel:#A8740F; --c-other:#5E7D3A;
+  --c-medical:#C2376F; --c-appt:#4F63B8; --c-family:#8A4F9E; --c-death:#55686B; --c-travel:#A8740F; --c-other:#5E7D3A; --c-transport:#2F7F8C; --ok:#2E7D5B; --ok-bg:#E3F3EA;
   --shadow:0 1px 2px rgba(120,30,70,.06),0 6px 20px rgba(120,30,70,.07);
   --shadow-lg:0 14px 40px rgba(120,30,70,.20);
   --scrim:rgba(30,8,18,.5);
@@ -27,14 +27,14 @@
   --bg:#140C11; --surface:#1F141A; --surface-2:#2A1B24; --ink:#F8E9F0; --muted:#C4A4B5; --line:#36242E;
   --accent:#F0679E; --accent-2:#A62A62; --accent-ink:#FFFFFF; --accent-soft:#3B1C2C; --gold:#E2BF7E;
   --danger:#F08A84; --warn-bg:#3A2C14; --warn-ink:#F2D49A;
-  --c-medical:#F0679E; --c-appt:#9AAAF0; --c-family:#CFA0DE; --c-death:#A3B5B8; --c-travel:#E2B65C; --c-other:#AFCB88;
+  --c-medical:#F0679E; --c-appt:#9AAAF0; --c-family:#CFA0DE; --c-death:#A3B5B8; --c-travel:#E2B65C; --c-other:#AFCB88; --c-transport:#7FC8D3; --ok:#7FD3AE; --ok-bg:#1D3A2E;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); --shadow-lg:0 16px 48px rgba(0,0,0,.55); --scrim:rgba(0,0,0,.6);
   color-scheme:dark } }
 :root[data-theme="dark"]{
   --bg:#140C11; --surface:#1F141A; --surface-2:#2A1B24; --ink:#F8E9F0; --muted:#C4A4B5; --line:#36242E;
   --accent:#F0679E; --accent-2:#A62A62; --accent-ink:#FFFFFF; --accent-soft:#3B1C2C; --gold:#E2BF7E;
   --danger:#F08A84; --warn-bg:#3A2C14; --warn-ink:#F2D49A;
-  --c-medical:#F0679E; --c-appt:#9AAAF0; --c-family:#CFA0DE; --c-death:#A3B5B8; --c-travel:#E2B65C; --c-other:#AFCB88;
+  --c-medical:#F0679E; --c-appt:#9AAAF0; --c-family:#CFA0DE; --c-death:#A3B5B8; --c-travel:#E2B65C; --c-other:#AFCB88; --c-transport:#7FC8D3; --ok:#7FD3AE; --ok-bg:#1D3A2E;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); --shadow-lg:0 16px 48px rgba(0,0,0,.55); --scrim:rgba(0,0,0,.6);
   color-scheme:dark }
 
@@ -193,6 +193,24 @@ main.wrap{padding-block:18px calc(104px + env(safe-area-inset-bottom,0px));displ
 .brow .field input,.brow .field select{min-height:44px;box-shadow:none}
 .brow .days{max-width:5.5em}
 .brow select,.brow .bNote{min-height:44px;width:100%;border:1px solid var(--line);border-radius:12px;padding:6px 12px;background:var(--surface);color:var(--ink);font-size:1rem}
+/* الحضور */
+.arows{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.arow{display:flex;flex-direction:column;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.arow:last-child{border-bottom:0}
+.arow.abs{background:color-mix(in srgb,var(--danger) 7%,var(--surface))}
+.atog{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;padding:0;text-align:start;color:var(--ink);min-height:48px}
+.atog .av{width:40px;height:40px;font-size:1.05rem}
+.atog .name{flex:1;min-width:0;font-weight:500;overflow-wrap:anywhere;line-height:1.5}
+.apill{flex:none;font-size:.8rem;font-weight:600;border-radius:99px;padding:3px 12px;background:var(--ok-bg);color:var(--ok)}
+.arow.abs .apill{background:color-mix(in srgb,var(--danger) 16%,transparent);color:var(--danger)}
+.absReason{min-height:44px;width:100%;border:1px solid var(--line);border-radius:12px;padding:6px 12px;background:var(--surface);color:var(--ink);font-size:1rem}
+.exhint{font-size:.8rem;color:var(--ok)}
+.stickybar{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:5;display:flex;gap:10px;padding:10px;margin-inline:-6px;border-radius:20px;background:color-mix(in srgb,var(--bg) 85%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.stickybar .btn{flex:1}
+body:has(.stickybar) #toast{bottom:calc(156px + env(safe-area-inset-bottom,0px))}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--surface-2)}
+.seg button{min-height:42px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-weight:500}
+.seg button.on{background:var(--surface);color:var(--accent);box-shadow:var(--shadow)}
 /* شريط التنقل السفلي */
 .tabbar{position:fixed;inset:auto 0 0;z-index:20;display:flex;justify-content:space-around;gap:4px;background:color-mix(in srgb,var(--surface) 90%,transparent);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-top:1px solid var(--line);padding:6px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .tab{flex:1;max-width:160px;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:transparent;color:var(--muted);font-size:.76rem;font-weight:500;padding:4px;min-height:54px}
@@ -214,6 +232,7 @@ main.wrap{padding-block:18px calc(104px + env(safe-area-inset-bottom,0px));displ
   <main class="wrap" id="view"></main>
   <nav class="tabbar" id="tabbar" hidden aria-label="التنقل">
     <button class="tab" data-act="navHome" data-tab="home"><span class="pill"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg></span>الرئيسية</button>
+    <button class="tab" data-act="openAtt" data-tab="att"><span class="pill"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="18" rx="2"/><path d="M9 2h6v4H9zM9 13l2 2 4-4"/></svg></span>الحضور</button>
     <button class="tab" data-act="openReport" data-tab="report"><span class="pill"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17v-5"/><path d="M13 17V8"/><path d="M18 17v-3"/></svg></span>التقارير</button>
     <button class="tab" data-act="settings" data-tab="settings"><span class="pill"><svg viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></span>الإعدادات</button>
   </nav>
@@ -231,7 +250,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const norm = s => String(s || '').toLowerCase().replace(/[ً-ْـ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ').trim();
 const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
-const CATS = [['medical','مرضي'],['appt','موعد مستشفى'],['family','ظرف عائلي'],['death','حالة وفاة'],['travel','سفر'],['other','أخرى']];
+const CATS = [['medical','مرضي'],['appt','موعد مستشفى'],['family','ظرف عائلي'],['death','حالة وفاة'],['travel','سفر'],['transport','لا توجد وسيلة نقل'],['other','أخرى']];
 const catName = k => (CATS.find(c => c[0] === k) || CATS[5])[1];
 let fmtH = null; try { fmtH = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn', {day:'numeric', month:'long', year:'numeric'}); } catch (e) {}
 const hijri = iso => { try { return fmtH ? fmtH.format(new Date(iso + 'T12:00:00')) : ''; } catch (e) { return ''; } };
@@ -257,7 +276,9 @@ const IC = {
   cloud:'<svg viewBox="0 0 24 24"><path d="M12 13v8M8 17l4-4 4 4"/><path d="M20.4 18A5 5 0 0 0 18 8.3 7 7 0 1 0 4 15.2"/></svg>',
   shield:'<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>',
   db:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5M3 12a9 3 0 0 0 18 0"/></svg>',
-  lock:'<svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
+  lock:'<svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  att:'<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="18" rx="2"/><path d="M9 2h6v4H9zM9 13l2 2 4-4"/></svg>',
+  phone:'<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>'
 };
 const AVC = ['medical','appt','family','travel','other','death'];
 const avatar = n => { const t = String(n || '').trim(); let h = 0; for (const ch of t) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return `<span class="av" style="--cc:var(--c-${AVC[h % AVC.length]})" aria-hidden="true">${esc(t.charAt(0) || '؟')}</span>`; };
@@ -279,15 +300,17 @@ const canShare = files => { try { return !!(navigator.share && navigator.canShar
 function dataUrlToFile(d, name) { const b = atob(d.split(',')[1] || ''), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return new File([u], name, {type:'image/jpeg'}); }
 
 /* ---------- التخزين: IndexedDB داخل الجهاز، مع بديل مؤقت في الذاكرة ---------- */
-const STORES = ['meta','classes','students','excuses','images'];
+const STORES = ['meta','classes','students','excuses','images','att'];
 let idb = null; const mem = {}; STORES.forEach(s => mem[s] = new Map());
 const rq = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 function openDB() {
   return new Promise(res => {
     try {
-      const r = indexedDB.open('excuses-register', 1);
+      const r = indexedDB.open('excuses-register', 2);
       r.onupgradeneeded = () => STORES.forEach(s => { if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, {keyPath:'id'}); });
-      r.onsuccess = () => res(r.result); r.onerror = () => res(null); r.onblocked = () => res(null);
+      r.onsuccess = () => { const d = r.result; d.onversionchange = () => { try { d.close(); } catch (e) {} }; res(d); }; r.onerror = () => res(null);
+      // نسخة قديمة مفتوحة تمنع الترقية: ننتظر بدل التخزين المؤقت حتى لا تضيع البيانات
+      r.onblocked = () => { const v = document.getElementById('view'); if (v) v.innerHTML = '<div class="lock"><div class="notice">يوجد تحديث للتطبيق. أغلقي التطبيق من قائمة التطبيقات المفتوحة ثم افتحيه من جديد.</div></div>'; };
     } catch (e) { res(null); }
   });
 }
@@ -299,7 +322,7 @@ const raw = {
   clear: s => idb ? rq(idb.transaction(s, 'readwrite').objectStore(s).clear()) : Promise.resolve(mem[s].clear())
 };
 /* التشفير: مفتاح بيانات عشوائي AES-GCM، يُقفل بمفتاح مشتق من رمز الدخول (PBKDF2). الرمز نفسه لا يُحفظ. */
-let DK = null; const ENC = ['classes','students','excuses','images'], ITER = 250000;
+let DK = null; const ENC = ['classes','students','excuses','images','att'], ITER = 250000;
 const hasCrypto = !!(window.crypto && crypto.subtle);
 const b64 = buf => { const u = new Uint8Array(buf); let t = ''; for (let i = 0; i < u.length; i += 32768) t += String.fromCharCode.apply(null, u.subarray(i, i + 32768)); return btoa(t); };
 const unb64 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
@@ -333,7 +356,7 @@ async function migratePlain() {
 }
 
 /* ---------- الحالة ---------- */
-const S = {classes:[], students:[], excuses:[], demo:false, school:{}, prefs:{}, lastBackup:0};
+const S = {att:[], classes:[], students:[], excuses:[], demo:false, school:{}, prefs:{}, lastBackup:0};
 let nav = [{v:'home'}], q = '', qd = '', unlocked = false;
 const cls = id => S.classes.find(c => c.id === id);
 const stu = id => S.students.find(s => s.id === id);
@@ -345,12 +368,49 @@ let themeSet = false;
 function applyTheme() { const t = S.prefs.theme, r = document.documentElement; if (t === 'light' || t === 'dark') { r.dataset.theme = t; themeSet = true; } else if (themeSet) { r.removeAttribute('data-theme'); themeSet = false; } }
 const schoolOf = c => (c && c.school === 2 && S.school.school2) ? S.school.school2 : (S.school.school || '');
 function schoolFor(list) { const set = new Set(); list.forEach(e => { const st = stu(e.studentId); if (st) set.add(schoolOf(cls(st.classId))); }); set.delete(''); return set.size === 1 ? [...set][0] : set.size ? [...set].join(' · ') : (S.school.school || ''); }
+const ABS = [['none','بدون عذر'],['sick','مريضة'],['travel','مسافرة'],['transport','لا توجد وسيلة نقل'],['death','حالة وفاة'],['family','ظروف عائلية'],['other','أخرى']];
+const absName = k => (ABS.find(a => a[0] === k) || ABS[0])[1];
+const CAT2ABS = {medical:'sick', appt:'sick', travel:'travel', transport:'transport', death:'death', family:'family', other:'other'};
+const isWeekend = iso => { const w = new Date(iso + 'T12:00:00').getDay(); return w === 5 || w === 6; };
+const attId = (date, cid) => date + '|' + cid;
+const attOf = (date, cid) => S.att.find(a => a.id === attId(date, cid));
+const excuseOn = (sid, date) => S.excuses.find(e => e.studentId === sid && e.date <= date && endOf(e) >= date);
+const effReason = (sid, date, r) => { if (r && r !== 'none') return r; const ex = excuseOn(sid, date); return ex ? (CAT2ABS[ex.category] || 'other') : 'none'; };
+let fmtP = null; try { fmtP = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn', {day:'numeric', month:'long', year:'numeric'}); } catch (e) {}
+function hParts(iso) { try { const o = {}; fmtP.formatToParts(new Date(iso + 'T12:00:00')).forEach(p => o[p.type] = p.value); return {d:parseInt(o.day, 10), m:o.month, y:o.year}; } catch (e) { return null; } }
+function hijriMonthStart(iso) { const p = hParts(iso); if (!p || !p.d) return iso.slice(0, 8) + '01'; const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() - (p.d - 1)); return isoOf(d); }
+const hMonthName = iso => { const p = hParts(iso); return p && p.m ? p.m + ' ' + p.y + ' هـ' : iso.slice(0, 7); };
+let fmtW = null; try { fmtW = new Intl.DateTimeFormat('ar-SA', {weekday:'long'}); } catch (e) {}
+const dayName = iso => { try { return fmtW.format(new Date(iso + 'T12:00:00')); } catch (e) { return ''; } };
+const waNum = p => { const d = String(p).replace(/\D/g, ''); return d.startsWith('05') ? '966' + d.slice(1) : d.startsWith('5') && d.length === 9 ? '966' + d : d; };
+const bothSchools = () => [S.school.school, S.school.school2].filter(Boolean).join(' و');
+function attData(from, to) {
+  const recs = S.att.filter(a => (!from || a.date >= from) && (!to || a.date <= to));
+  const per = new Map(), byClass = new Map(S.classes.map(c => [c.id, {c, recs:0, possible:0, abs:0, ex:0}]));
+  let possible = 0, absTot = 0, exTot = 0; const reasons = {};
+  for (const a of recs) {
+    const bc = byClass.get(a.classId); if (!bc) continue; const st = stuOf(a.classId);
+    bc.recs++; bc.possible += st.length; possible += st.length;
+    for (const s of st) {
+      const o = per.get(s.id) || {s, rec:0, ex:0, unex:0, reasons:{}}; o.rec++;
+      const ab = a.absent && a.absent[s.id];
+      if (ab) { const r = effReason(s.id, a.date, ab.reason); reasons[r] = (reasons[r] || 0) + 1; o.reasons[r] = (o.reasons[r] || 0) + 1; if (r === 'none') o.unex++; else { o.ex++; bc.ex++; exTot++; } bc.abs++; absTot++; }
+      per.set(s.id, o);
+    }
+  }
+  const students = [...per.values()].map(o => Object.assign(o, {abs:o.ex + o.unex})).sort((a, b) => b.abs - a.abs || b.unex - a.unex || a.s.name.localeCompare(b.s.name, 'ar'));
+  const al = alertDays();
+  return {recs, days:new Set(recs.map(a => a.date)).size, possible, absTot, exTot, unexTot:absTot - exTot, rate:possible ? Math.round((possible - absTot) / possible * 1000) / 10 : 0,
+    classes:[...byClass.values()].filter(r => r.recs), students, reasons, frequent:students.filter(o => o.abs >= al), disciplined:students.filter(o => o.abs === 0 && o.rec > 0).sort((a, b) => (cls(a.s.classId) || {}).created - (cls(b.s.classId) || {}).created || a.s.name.localeCompare(b.s.name, 'ar'))};
+}
+const reasonText = o => ABS.filter(([k]) => o.reasons[k]).map(([k, l]) => l + ' ' + o.reasons[k]).join('، ');
 const backupDays = () => S.prefs.backupDays == null ? 7 : Number(S.prefs.backupDays);
 const periodWord = n => n === 7 ? 'أسبوع' : n === 14 ? 'أسبوعين' : n === 30 ? 'شهر' : n + ' يوماً';
 const lockMin = () => S.prefs.autoLock == null ? 5 : Number(S.prefs.autoLock);
 async function loadAll() {
   [S.classes, S.students, S.excuses] = await Promise.all([db.all('classes'), db.all('students'), db.all('excuses')]);
   S.classes.sort((a, b) => a.created - b.created);
+  S.att = await db.all('att');
   const m = await db.get('meta', 'seed'); S.demo = !!(m && m.demo);
   S.school = (await raw.get('meta', 'school')) || {};
   S.prefs = (await raw.get('meta', 'prefs')) || {};
@@ -484,10 +544,16 @@ async function seedDemo() {
       }
     }
   }
+  // تحضير وهمي لآخر أيام الدوام
+  const allC = await db.all('classes'), allS = await db.all('students'); let seedN = 7;
+  for (let back = 1, made = 0; made < 8 && back < 20; back++) {
+    const dd = new Date(); dd.setDate(dd.getDate() - back); const iso = isoOf(dd); if (isWeekend(iso)) continue; made++;
+    for (const c of allC) { const st = allS.filter(x => x.classId === c.id), absent = {}; for (const x of st) { seedN = (seedN * 37 + 11) % 101; if (seedN < 9) absent[x.id] = {reason:ABS[seedN % ABS.length][0]}; } await db.put('att', {id:attId(iso, c.id), date:iso, classId:c.id, absent, takenAt:Date.now()}); }
+  }
   await db.put('meta', {id:'seed', demo:true});
 }
 async function wipeAll(keepSeedFlag) {
-  for (const s of ['classes','students','excuses','images']) await db.clear(s);
+  for (const s of ['classes','students','excuses','images','att']) await db.clear(s);
   if (keepSeedFlag) await db.put('meta', {id:'seed', demo:false});
   await loadAll();
 }
@@ -497,9 +563,9 @@ function render() {
   if (!unlocked) return;
   const top = nav[nav.length - 1];
   $('#backBtn').hidden = nav.length < 2;
-  const tab = top.v === 'report' ? 'report' : top.v === 'settings' ? 'settings' : 'home';
+  const tab = top.v === 'report' ? 'report' : top.v === 'settings' ? 'settings' : (top.v === 'att' || top.v === 'attcls') ? 'att' : 'home';
   document.querySelectorAll('.tab').forEach(b => { const on = b.dataset.tab === tab; b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-  ({home:vHome, cls:vClass, stu:vStudent, settings:vSettings, report:vReport}[top.v])(top);
+  ({home:vHome, cls:vClass, stu:vStudent, settings:vSettings, report:vReport, att:vAtt, attcls:vAttCls}[top.v])(top);
 }
 function vHome() {
   $('#barTitle').textContent = 'سجل أعذار الطالبات';
@@ -545,6 +611,7 @@ function homeList() {
   if (!n && !qd) {
     if (S.demo) h += `<div class="notice"><span>تعملين الآن على بيانات وهمية للتجربة. جرّبي كل شيء بحرية، ثم امسحيها قبل إدخال بيانات حقيقية.</span><button class="btn small" data-act="askWipeDemo">مسح البيانات الوهمية</button></div>`;
     if (!S.school.school) h += `<button class="btn small" data-act="settings">${IC.school} أضيفي اسم المدرسة ليظهر في المطبوعات</button>`;
+    if (S.classes.length) { const t = todayISO(), done = S.classes.filter(c => attOf(t, c.id)).length; h += `<button class="btn" data-act="openAtt">${IC.att} تحضير اليوم: ${isWeekend(t) ? 'عطلة' : done + ' من ' + S.classes.length + ' فصول'}</button>`; }
     const lb = S.lastBackup;
     const bd = backupDays();
     if (bd > 0 && !S.demo && S.excuses.length && (!lb || Date.now() - lb > bd * 864e5)) h += `<div class="notice"><span>${lb ? 'مرّ أكثر من ' + periodWord(bd) + ' على آخر نسخة احتياطية.' : 'لم تُحفظ أي نسخة احتياطية بعد.'} احفظي نسخة الآن حتى لا تضيع البيانات إن تغيّر الجوال.</span><button class="btn small" data-act="backup">حفظ نسخة احتياطية</button></div>`;
@@ -580,22 +647,57 @@ function vClass(top) {
 function vStudent(top) {
   const s = stu(top.id); if (!s) return back();
   const c = cls(s.classId), ex = exOf(s.id), d = totalDays(s.id), al = alertDays(); $('#barTitle').textContent = s.name;
-  $('#view').innerHTML = `<div class="pagehead">${avatar(s.name)}<div class="head"><h2>${esc(s.name)}</h2><p class="sub">${esc(c ? c.name : '')} · ${ex.length} عذر · ${dayWord(d)} غياب</p><p class="sub">السجل المدني: ${s.nid ? bdi(s.nid) : '<span>لم يُسجّل</span>'}</p></div></div>
+  $('#view').innerHTML = `<div class="pagehead">${avatar(s.name)}<div class="head"><h2>${esc(s.name)}</h2><p class="sub">${esc(c ? c.name : '')} · ${ex.length} عذر · ${dayWord(d)} غياب</p><p class="sub">السجل المدني: ${s.nid ? bdi(s.nid) : '<span>لم يُسجّل</span>'}</p><p class="sub">جوال ولي الأمر: ${s.phone ? bdi(s.phone) : '<span>لم يُسجّل</span>'}</p></div></div>
+    ${s.phone ? `<div class="actions"><a class="btn small grow" href="tel:${esc(s.phone)}">${IC.phone} اتصال</a><a class="btn small grow" href="https://wa.me/${esc(waNum(s.phone))}?text=${encodeURIComponent('السلام عليكم، نفيدكم من ' + (schoolOf(c) || 'المدرسة') + ' بخصوص الطالبة ' + s.name + '.')}" target="_blank" rel="noopener">${IC.share} واتساب</a></div>` : ''}
     ${ex.length && d >= al ? `<div class="notice">تجاوزت الطالبة حد التنبيه: ${dayWord(d)} غياب بعذر (الحد ${al}).</div>` : ''}
     <div class="actions"><button class="btn primary grow" data-act="newExcuse">${IC.plus} عذر جديد</button><button class="btn grow" data-act="batchExcuse">${IC.img} عدة أعذار دفعة واحدة</button></div><div class="actions">${ex.length ? `<button class="btn grow" data-act="pdfStudent">${IC.pdf} طباعة أو مشاركة الملف (PDF)</button>` : ''}</div>
     ${ex.length ? `<div class="list">${ex.map(e => excuseItem(e)).join('')}</div>` : `<div class="empty">${IC.file}<span>لا توجد أعذار محفوظة لهذه الطالبة بعد.</span></div>`}
     <div class="actions"><button class="btn small" data-act="renameStudent">${IC.edit} تعديل البيانات</button><button class="btn small" data-act="moveStudent">${IC.move} نقل لفصل آخر</button><button class="btn small danger" data-act="askDelStudent">${IC.trash} حذف الطالبة</button></div>`;
+}
+/* ---------- الحضور والغياب ---------- */
+let attDate = null, attDraft = null;
+function vAtt() {
+  if (!attDate) attDate = todayISO();
+  $('#barTitle').textContent = 'الحضور والغياب';
+  const recs = S.classes.map(c => ({c, st:stuOf(c.id).length, rec:attOf(attDate, c.id)}));
+  const done = recs.filter(r => r.rec), reg = done.reduce((a, r) => a + r.st, 0), abs = done.reduce((a, r) => a + Object.keys(r.rec.absent || {}).length, 0);
+  $('#view').innerHTML = `<div class="pagehead"><span class="ic">${IC.att}</span><div class="head"><h2>تحضير ${esc(dayName(attDate))}</h2><p class="sub">${esc(hijri(attDate))} · ${esc(attDate)}</p></div></div>
+    <label class="field">تاريخ التحضير<input id="attDate" type="date" value="${esc(attDate)}"></label>
+    ${isWeekend(attDate) ? '<div class="notice">هذا اليوم عطلة نهاية الأسبوع.</div>' : ''}
+    <div class="stats"><div class="stat"><b>${done.length}/${recs.length}</b><span>فصول محضّرة</span></div><div class="stat"><b>${reg - abs}</b><span>حاضرة</span></div><div class="stat"><b>${abs}</b><span>غائبة</span></div></div>
+    ${recs.length ? `<div class="list">${recs.map(r => { const n = r.rec ? Object.keys(r.rec.absent || {}).length : 0; return `<button class="item" data-act="openAttCls" data-id="${r.c.id}"><span class="txt"><span class="name">${esc(r.c.name)}</span><span class="sub">${r.st} طالبة</span></span><span class="count ${r.rec ? (n ? 'warn' : 'has') : ''}">${r.rec ? (n ? n + ' غائبة' : 'الكل حاضرات') : 'لم يُحضَّر'}</span>${IC.chev}</button>`; }).join('')}</div>` : '<div class="empty">' + IC.users + '<span>أضيفي الفصول أولاً من الرئيسية.</span></div>'}
+    <div class="actions"><button class="btn primary grow" data-act="pdfDaily" ${done.length ? '' : 'disabled'}>${IC.pdf} الكشف اليومي (PDF)</button><button class="btn grow" data-act="openAttReport">${IC.chart} الحصر الأسبوعي والشهري</button></div>`;
+}
+function vAttCls(top) {
+  const c = cls(top.id); if (!c) return back();
+  if (!attDate) attDate = todayISO();
+  const rec = attOf(attDate, c.id);
+  if (!attDraft || attDraft.cid !== c.id || attDraft.date !== attDate) attDraft = {cid:c.id, date:attDate, absent:rec ? JSON.parse(JSON.stringify(rec.absent || {})) : {}};
+  $('#barTitle').textContent = 'تحضير ' + c.name;
+  $('#view').innerHTML = `<div class="pagehead"><span class="ic">${IC.users}</span><div class="head"><h2>${esc(c.name)}</h2><p class="sub">${esc(dayName(attDate))} ${esc(hijri(attDate))}${rec ? ' · محفوظ' : ''}</p><p class="sub" id="attCount"></p></div></div>
+    <p class="sub">كل الطالبات حاضرات افتراضياً. اضغطي على اسم الغائبة، ثم اختاري سبب الغياب.</p>
+    <div class="arows" id="attRows"></div>
+    <div class="stickybar"><button class="btn" data-act="allPresent">الكل حاضرات</button><button class="btn primary" data-act="saveAtt">حفظ التحضير</button></div>`;
+  renderAttRows();
+}
+function renderAttRows() {
+  const b = $('#attRows'); if (!b || !attDraft) return;
+  const st = stuOf(attDraft.cid), n = Object.keys(attDraft.absent).length;
+  b.innerHTML = st.map(s => { const ab = attDraft.absent[s.id], ex = excuseOn(s.id, attDraft.date);
+    return `<div class="arow ${ab ? 'abs' : ''}"><button class="atog" data-act="toggleAbs" data-id="${s.id}" aria-pressed="${ab ? 'true' : 'false'}">${avatar(s.name)}<span class="name">${esc(s.name)}</span><span class="apill">${ab ? 'غائبة' : 'حاضرة'}</span></button>
+      ${ab ? `<select class="absReason" data-id="${s.id}" aria-label="سبب غياب ${esc(s.name)}">${ABS.map(([k, l]) => `<option value="${k}" ${ab.reason === k ? 'selected' : ''}>${l}</option>`).join('')}</select>${ex ? `<span class="exhint">عذر مسجل في التطبيق: ${esc(catName(ex.category))}</span>` : ''}` : ''}</div>`; }).join('') || '<div class="empty"><span>لا توجد طالبات في هذا الفصل.</span></div>';
+  const cnt = $('#attCount'); if (cnt) cnt.textContent = `المسجلات ${st.length} · الحاضرات ${st.length - n} · الغائبات ${n}`;
 }
 /* ---------- التقارير ---------- */
 let rp = null;
 function rpPreset(k) {
   const t = todayISO(), d = new Date(t + 'T12:00:00');
   if (k === 'week') { d.setDate(d.getDate() - d.getDay()); return {k, from:isoOf(d), to:t}; }
-  if (k === 'month') return {k, from:t.slice(0, 8) + '01', to:t};
+  if (k === 'month') return {k, from:hijriMonthStart(t), to:t};
   if (k === '30') { d.setDate(d.getDate() - 29); return {k, from:isoOf(d), to:t}; }
   return {k:'all', from:'', to:''};
 }
-const rpLabel = () => rp.from || rp.to ? 'من ' + (rp.from ? hijri(rp.from) : 'البداية') + ' إلى ' + (rp.to ? hijri(rp.to) : 'اليوم') : 'كل الأعذار المسجلة';
+const rpLabel = () => rp.k === 'month' ? 'شهر ' + hMonthName(rp.from) : rp.k === 'week' ? 'الأسبوع من ' + hijri(rp.from) + ' إلى ' + hijri(rp.to) : rp.from || rp.to ? 'من ' + (rp.from ? hijri(rp.from) : 'البداية') + ' إلى ' + (rp.to ? hijri(rp.to) : 'اليوم') : 'كل الأعذار المسجلة';
 function rpData() {
   const list = S.excuses.filter(e => (!rp.from || e.date >= rp.from) && (!rp.to || e.date <= rp.to));
   const by = new Map(); list.forEach(e => { const o = by.get(e.studentId) || {n:0, d:0}; o.n++; o.d += daysOf(e); by.set(e.studentId, o); });
@@ -605,20 +707,39 @@ function rpData() {
   return {list, total:list.length, days:list.reduce((a, e) => a + daysOf(e), 0), cats, classes, students};
 }
 const rpStu = r => { const c = cls(r.s.classId), w = r.d >= alertDays(); return `<button class="item" data-act="openStudent" data-id="${r.s.id}"><span class="txt"><span class="name">${esc(r.s.name)}</span><span class="sub">${esc(c ? c.name : '')} · ${r.n} عذر</span></span><span class="count ${w ? 'warn' : 'has'}">${r.d} يوم</span>${IC.chev}</button>`; };
+let rpMode = 'ex';
 function vReport() {
   if (!rp) rp = rpPreset('month');
   $('#barTitle').textContent = 'التقارير';
-  const P = [['week','هذا الأسبوع'],['month','هذا الشهر'],['30','آخر 30 يوماً'],['all','الكل']];
+  const P = [['week','هذا الأسبوع'],['month','هذا الشهر الهجري'],['30','آخر 30 يوماً'],['all','الكل']];
   $('#view').innerHTML = `<div class="head"><h2>التقارير والإحصائيات</h2><p class="sub" id="rpLabel"></p></div>
+    <div class="seg" role="tablist"><button class="${rpMode === 'ex' ? 'on' : ''}" data-act="rpMode" data-m="ex" role="tab">الأعذار</button><button class="${rpMode === 'att' ? 'on' : ''}" data-act="rpMode" data-m="att" role="tab">الحضور والغياب</button></div>
     <div class="chips" id="rpChips">${P.map(([k, l]) => `<button class="chipbtn" data-act="rpPreset" data-k="${k}">${l}</button>`).join('')}</div>
     <div class="daterow"><label class="field">من تاريخ<input id="rpFrom" type="date" value="${esc(rp.from)}"></label><label class="field">إلى تاريخ<input id="rpTo" type="date" value="${esc(rp.to)}"></label></div>
     <div id="rpBody" style="display:flex;flex-direction:column;gap:16px"></div>`;
   rpBody();
 }
+function attBody(b) {
+  const A = attData(rp.from, rp.to), al = alertDays();
+  if (!A.recs.length) { b.innerHTML = '<div class="empty">' + IC.att + '<span>لا يوجد تحضير مسجل في هذه الفترة. ابدئي من تبويب «الحضور».</span></div>'; return; }
+  const maxR = Math.max(1, ...ABS.map(([k]) => A.reasons[k] || 0));
+  const stuRow = o => { const c = cls(o.s.classId); return `<button class="item" data-act="openStudent" data-id="${o.s.id}"><span class="txt"><span class="name">${esc(o.s.name)}</span><span class="sub">${esc(c ? c.name : '')} · بعذر ${o.ex} · بدون عذر ${o.unex}</span></span><span class="count ${o.abs >= al ? 'warn' : 'has'}">${o.abs} يوم</span>${IC.chev}</button>`; };
+  b.innerHTML = `<div class="stats"><div class="stat"><b>${A.rate}%</b><span>نسبة الحضور</span></div><div class="stat"><b>${A.exTot}</b><span>غياب بعذر</span></div><div class="stat"><b>${A.unexTot}</b><span>بدون عذر</span></div></div>
+    <p class="sub">أيام التحضير في الفترة: ${A.days} · إجمالي الغياب: ${A.absTot}</p>
+    <div class="actions"><button class="btn primary grow" data-act="pdfFrequent">${IC.pdf} استمارة كثيرات الغياب</button><button class="btn grow" data-act="pdfDisc">${IC.pdf} كشف المنضبطات</button></div>
+    <button class="btn" data-act="pdfAttRep">${IC.pdf} تقرير الحضور والغياب (PDF)</button>
+    <div class="sec-title"><h2>كثيرات الغياب</h2><span class="count warn">${al} أيام فأكثر</span></div>
+    ${A.frequent.length ? `<div class="list">${A.frequent.map(stuRow).join('')}</div>` : '<div class="empty"><span>لا توجد طالبة وصلت حد التنبيه في هذه الفترة.</span></div>'}
+    <h2>أسباب الغياب</h2><div class="meters">${ABS.filter(([k]) => A.reasons[k]).map(([k, l]) => `<div class="meter"><span>${l}</span><span class="meter-track"><span class="meter-fill" style="width:${Math.round((A.reasons[k] || 0) / maxR * 100)}%;background:${k === 'none' ? 'var(--danger)' : 'var(--accent)'}"></span></span><span class="num">${A.reasons[k]}</span></div>`).join('') || '<span class="sub">لا يوجد غياب.</span>'}</div>
+    <h2>حسب الفصل</h2><div class="list">${A.classes.map(r => `<div class="item"><span class="txt"><span class="name">${esc(r.c.name)}</span><span class="sub">${r.recs} يوم تحضير · بعذر ${r.ex} · بدون عذر ${r.abs - r.ex}</span></span><span class="count has">${r.possible ? Math.round((r.possible - r.abs) / r.possible * 100) : 0}%</span></div>`).join('')}</div>
+    <div class="sec-title"><h2>المنضبطات</h2><span class="count has">${A.disciplined.length} طالبة</span></div>
+    ${A.disciplined.length ? `<div class="list">${A.disciplined.slice(0, 15).map(o => { const c = cls(o.s.classId); return `<button class="item" data-act="openStudent" data-id="${o.s.id}"><span class="txt"><span class="name">${esc(o.s.name)}</span><span class="sub">${esc(c ? c.name : '')}</span></span>${IC.chev}</button>`; }).join('')}</div>${A.disciplined.length > 15 ? `<p class="sub">و${A.disciplined.length - 15} طالبة أخرى في الكشف المطبوع.</p>` : ''}` : '<div class="empty"><span>لا توجد طالبة بحضور كامل في هذه الفترة.</span></div>'}`;
+}
 function rpBody() {
   const b = $('#rpBody'); if (!b) return;
   $('#rpLabel').textContent = rpLabel();
   document.querySelectorAll('#rpChips .chipbtn').forEach(x => x.classList.toggle('on', x.dataset.k === rp.k));
+  if (rpMode === 'att') return attBody(b);
   const D = rpData(), al = alertDays();
   if (!D.total) { b.innerHTML = '<div class="empty">لا توجد أعذار مسجلة في هذه الفترة.</div>'; return; }
   const maxC = Math.max(1, ...D.cats.map(c => c.n)), over = D.students.filter(r => r.d >= al);
@@ -641,6 +762,7 @@ async function vSettings() {
     <label class="field">اسم المدرسة<input id="scSchool" maxlength="80" autocomplete="off" value="${esc(sc.school || '')}"></label>
     <label class="field">مدرسة ثانية بنفس الإدارة (اختياري)<input id="scSchool2" maxlength="80" autocomplete="off" placeholder="مثال: الثانوية الأولى (كبيرات)" value="${esc(sc.school2 || '')}"><span class="sub">إذا كتبتِها تختارين لكل فصل مدرسته، ويُطبع اسمها تلقائياً.</span></label>
     <label class="field">اسم الإدارية المسؤولة<input id="scAdmin" maxlength="80" autocomplete="off" value="${esc(sc.admin || '')}"></label>
+    <label class="field">اسم الوكيلة الطلابية<input id="scWakila" maxlength="80" autocomplete="off" value="${esc(sc.wakila || '')}"></label>
     <label class="field">اسم مديرة المدرسة<input id="scPrincipal" maxlength="80" autocomplete="off" value="${esc(sc.principal || '')}"></label>
     <button class="btn primary" type="submit">حفظ بيانات المدرسة</button></form></section>
     <section class="group"><h2>${IC.bell} التنبيه والمظهر والقفل</h2>
@@ -653,7 +775,8 @@ async function vSettings() {
     <section class="group"><h2>${IC.cloud} النسخ الاحتياطي</h2>
     <p class="sub">النسخة ملف واحد مشفّر يحوي الفصول والطالبات والأعذار والصور، ويُفتح برمز الدخول المستخدم وقت حفظه. أرسليها لنفسك في واتساب أو احفظيها في Google Drive.</p>
     <div class="actions"><button class="btn primary grow" data-act="backup">${IC.cloud} حفظ أو مشاركة نسخة</button>
-    <label class="btn grow"><input class="vh" id="restoreFile" type="file" accept=".json,application/json">${IC.file} استعادة من ملف</label></div></section>
+    <label class="btn grow"><input class="vh" id="restoreFile" type="file" accept=".json,application/json">${IC.file} استعادة من ملف</label></div>
+    <label class="btn"><input class="vh" id="importFile" type="file" accept=".json,application/json">${IC.plus} استيراد أعذار من ملف (يضيف بدون حذف)</label></section>
     <section class="group"><h2>${IC.db} حالة التخزين</h2>
     <div class="list"><div class="kv"><span>مكان الحفظ</span><span>${idb ? 'داخل هذا الجهاز فقط' : 'مؤقت — يزول عند الإغلاق'}</span></div>
     <div class="kv"><span>الفصول</span><span>${S.classes.length}</span></div><div class="kv"><span>الطالبات</span><span>${S.students.length}</span></div>
@@ -668,8 +791,8 @@ async function vSettings() {
 }
 
 /* ---------- النماذج ---------- */
-function nameForm(title, label, value, act, nid) {
-  openModal(sheetHead(title) + `<form id="nameForm" data-kind="${act}"><label class="field">${esc(label)}<input id="nameInput" value="${esc(value)}" required maxlength="80" autocomplete="off"></label>${nid != null ? `<label class="field">رقم السجل المدني<input id="nidInput" value="${esc(nid)}" maxlength="24" inputmode="numeric" dir="ltr" autocomplete="off" placeholder="مثال: 1123456789"></label>` : ''}<button class="btn primary" type="submit">حفظ</button></form>`);
+function nameForm(title, label, value, act, nid, phone) {
+  openModal(sheetHead(title) + `<form id="nameForm" data-kind="${act}"><label class="field">${esc(label)}<input id="nameInput" value="${esc(value)}" required maxlength="80" autocomplete="off"></label>${nid != null ? `<label class="field">رقم السجل المدني<input id="nidInput" value="${esc(nid)}" maxlength="24" inputmode="numeric" dir="ltr" autocomplete="off" placeholder="مثال: 1123456789"></label><label class="field">جوال ولي الأمر<input id="phoneInput" type="tel" value="${esc(phone || '')}" maxlength="15" inputmode="tel" dir="ltr" autocomplete="off" placeholder="05XXXXXXXX"></label>` : ''}<button class="btn primary" type="submit">حفظ</button></form>`);
   setTimeout(() => { const i = $('#nameInput'); if (i) i.focus(); }, 50);
 }
 function bulkForm() {
@@ -859,10 +982,12 @@ async function makeDoc(title, sub, schoolName) {
   };
   d.note = async (y, t) => { y = await d.room(y, 60); x.textAlign = 'right'; x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText(t, R, y + 44); return y + 60; };
   d.sign = async y => {
-    if (!(sc.admin || sc.principal)) return y;
+    const people = [['الإدارية المسؤولة', sc.admin], ['الوكيلة الطلابية', sc.wakila], ['مديرة المدرسة', sc.principal]].filter(p => p[1]);
+    if (!people.length) return y;
     if (y + 70 > H - 340) { await d.flush(); y = d.page(); }
-    const sy = H - 300, sig = (label, name, px, al) => { if (!name) return; x.textAlign = al; x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText(label, px, sy); x.fillStyle = INK; x.font = '600 26px ' + BF; x.fillText(fit(x, name, 440), px, sy + 42); x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText('التوقيع: ............................', px, sy + 100); };
-    sig('الإدارية المسؤولة', sc.admin, R, 'right'); sig('مديرة المدرسة', sc.principal, M, 'left'); x.textAlign = 'right';
+    const sy = H - 300, sig = (label, name, px, al) => { if (!name) return; x.textAlign = al; x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText(label, px, sy); x.fillStyle = INK; x.font = '600 26px ' + BF; x.fillText(fit(x, name, people.length === 3 ? 330 : 440), px, sy + 42); x.fillStyle = MUT; x.font = '22px ' + BF; x.fillText('التوقيع: ............................', px, sy + 100); };
+    const pos = people.length === 3 ? [[R, 'right'], [W / 2, 'center'], [M, 'left']] : people.length === 2 ? [[R, 'right'], [M, 'left']] : [[R, 'right']];
+    people.forEach((pp, i) => sig(pp[0], pp[1], pos[i][0], pos[i][1])); x.textAlign = 'right';
     return y;
   };
   d.photoPage = async (img, e, k, n, low) => {
@@ -904,6 +1029,64 @@ async function exportPDF(title, sub, list, withStudent, schoolName) {
   }
   fileReady(safeName(title) + ' ' + todayISO() + '.pdf', d.blob(), 'pdf');
 }
+async function pdfDaily() {
+  const date = attDate || todayISO(), list = S.classes.map(c => ({c, st:stuOf(c.id), rec:attOf(date, c.id)}));
+  if (!list.some(r => r.rec)) return toast('لم يُحضَّر أي فصل في هذا اليوم');
+  toast('جارٍ تجهيز الكشف…');
+  const d = await makeDoc('كشف حضور وغياب الطالبات', 'اليوم: ' + dayName(date) + '   ·   التاريخ: ' + hijri(date) + '  (' + date + ')', bothSchools());
+  let y = d.page(), reg = 0, abs = 0;
+  for (const r of list) {
+    y = await d.section(y, r.c.name);
+    if (!r.rec) { y = await d.note(y, 'لم يُحضَّر هذا الفصل'); continue; }
+    const ids = Object.keys(r.rec.absent || {}), absent = r.st.filter(s => ids.includes(s.id)); reg += r.st.length; abs += absent.length;
+    y = await d.note(y - 20, 'المسجلات: ' + r.st.length + '   ·   الحضور: ' + (r.st.length - absent.length) + '   ·   الغياب: ' + absent.length);
+    const rows = absent.length ? absent.map((s, i) => { const rr = effReason(s.id, date, r.rec.absent[s.id].reason); return [String(i + 1), {t:s.name, b:true}, rr === 'none' ? 'بدون عذر' : 'بعذر', rr === 'none' ? '—' : absName(rr), s.phone || '', '', '']; }) : [['', 'لا يوجد غياب', '', '', '', '', '']];
+    y = await d.table(y, ['م', 'اسم الطالبة', 'نوع الغياب', 'سبب الغياب', 'رقم الهاتف', 'الزمن', 'المجيب'], [50, 330, 120, 180, 180, 100], rows);
+    y += 10;
+  }
+  y = await d.note(y, 'الإجمالي: المسجلات ' + reg + '   ·   الحضور ' + (reg - abs) + '   ·   الغياب ' + abs);
+  await d.sign(y); await d.flush();
+  fileReady('كشف الحضور والغياب ' + date + '.pdf', d.blob(), 'pdf');
+}
+async function pdfFrequent() {
+  const A = attData(rp.from, rp.to), al = alertDays();
+  toast('جارٍ تجهيز الاستمارة…');
+  const d = await makeDoc('استمارة حصر الطالبات كثيرات الغياب', rpLabel(), bothSchools()), x = d.x;
+  let y = d.page();
+  y = await d.table(y, ['م', 'اسم الطالبة', 'الصف/الشعبة', 'بعذر', 'بدون عذر', 'ملاحظات'], [50, 360, 250, 80, 110], A.frequent.length ? A.frequent.map((o, i) => { const c = cls(o.s.classId); return [String(i + 1), {t:o.s.name, b:true, s:o.s.nid || ''}, c ? c.name : '', String(o.ex), String(o.unex), {t:reasonText(o), wrap:true}]; }) : [['', 'لا توجد طالبة تغيّبت ' + al + ' أيام فأكثر', '', '', '', '']]);
+  y = await d.note(y, '* تقوم المسؤولة بحصر الطالبات اللاتي تغيّبن ' + al + ' أيام فأكثر خلال الفترة، ويُسلَّم للموجهة الطلابية لدراسة أسباب الغياب.');
+  await d.sign(y); await d.flush();
+  fileReady('استمارة كثيرات الغياب ' + todayISO() + '.pdf', d.blob(), 'pdf');
+}
+async function pdfDisc() {
+  const A = attData(rp.from, rp.to);
+  toast('جارٍ تجهيز الكشف…');
+  const d = await makeDoc('كشف بأسماء الطالبات المنضبطات', rpLabel(), bothSchools());
+  let y = d.page();
+  y = await d.table(y, ['م', 'اسم الطالبة', 'الصف/الشعبة', 'ملاحظات'], [50, 440, 300], A.disciplined.length ? A.disciplined.map((o, i) => { const c = cls(o.s.classId); return [String(i + 1), {t:o.s.name, b:true}, c ? c.name : '', 'حضور كامل (' + o.rec + ' يوم)']; }) : [['', 'لا توجد طالبة بحضور كامل في هذه الفترة', '', '']]);
+  y = await d.note(y, 'عدد الطالبات المنضبطات: ' + A.disciplined.length);
+  await d.sign(y); await d.flush();
+  fileReady('كشف المنضبطات ' + todayISO() + '.pdf', d.blob(), 'pdf');
+}
+async function pdfAttRep() {
+  const A = attData(rp.from, rp.to);
+  if (!A.recs.length) return toast('لا يوجد تحضير في هذه الفترة');
+  toast('جارٍ تجهيز التقرير…');
+  const d = await makeDoc('تقرير الحضور والغياب', rpLabel(), bothSchools()), x = d.x;
+  let y = d.page();
+  const bw = (d.W - 2 * d.M - 40) / 3;
+  [['نسبة الحضور', A.rate + '%'], ['غياب بعذر', A.exTot], ['غياب بدون عذر', A.unexTot]].forEach(([l, v], i) => {
+    const bx = d.R - (i + 1) * bw - i * 20; x.fillStyle = '#FBF1F4'; x.fillRect(bx, y, bw, 124); x.strokeStyle = '#EFD3DC'; x.lineWidth = 2; x.strokeRect(bx, y, bw, 124);
+    x.textAlign = 'center'; x.fillStyle = '#C2376F'; x.font = '600 50px ' + d.HF; x.fillText(String(v), bx + bw / 2, y + 66); x.fillStyle = d.MUT; x.font = '22px ' + d.BF; x.fillText(l, bx + bw / 2, y + 104);
+  });
+  x.textAlign = 'right'; y += 150;
+  y = await d.note(y - 20, 'أيام التحضير: ' + A.days + '   ·   إجمالي الغياب: ' + A.absTot + '   ·   كثيرات الغياب: ' + A.frequent.length + '   ·   المنضبطات: ' + A.disciplined.length);
+  y = await d.section(y + 10, 'حسب الفصل'); y = await d.table(y, ['الفصل', 'أيام التحضير', 'نسبة الحضور', 'بعذر', 'بدون عذر'], [360, 160, 160, 100], A.classes.map(r => [r.c.name, String(r.recs), (r.possible ? Math.round((r.possible - r.abs) / r.possible * 100) : 0) + '%', String(r.ex), String(r.abs - r.ex)]));
+  y = await d.section(y + 24, 'أسباب الغياب'); y = await d.table(y, ['السبب', 'عدد أيام الغياب'], [420], ABS.filter(([k]) => A.reasons[k]).map(([k, l]) => [l, String(A.reasons[k])]));
+  if (A.frequent.length) { y = await d.section(y + 24, 'كثيرات الغياب'); y = await d.table(y, ['م', 'اسم الطالبة', 'الصف/الشعبة', 'بعذر', 'بدون عذر'], [50, 420, 270, 90], A.frequent.map((o, i) => { const c = cls(o.s.classId); return [String(i + 1), {t:o.s.name, b:true}, c ? c.name : '', String(o.ex), String(o.unex)]; })); }
+  await d.sign(y); await d.flush();
+  fileReady('تقرير الحضور والغياب ' + todayISO() + '.pdf', d.blob(), 'pdf');
+}
 async function reportPDF() {
   const D = rpData(); if (!D.total) return toast('لا توجد أعذار في هذه الفترة');
   toast('جارٍ تجهيز التقرير…');
@@ -929,6 +1112,45 @@ async function backup() {
   for (const s of ENC) data[s] = (await raw.all(s)).map(pack);
   fileReady('نسخة احتياطية - سجل الأعذار ' + todayISO() + '.json', new Blob([JSON.stringify(data)], {type:'application/json'}), 'backup');
 }
+/* استيراد أعذار جاهزة (ملف يُجهَّز من صور الأعذار الورقية): يضيف إلى الموجود ولا يحذف شيئاً */
+let importData = null;
+function matchStudent(it) {
+  const nid = cleanNid(it.nid || '');
+  if (nid) { const s = S.students.find(x => x.nid && x.nid === nid); if (s) return s; }
+  const n = norm(it.name || ''); if (!n) return null;
+  const hits = S.students.filter(x => norm(x.name) === n); return hits.length === 1 ? hits[0] : null;
+}
+async function readImport(file) {
+  try {
+    const d = JSON.parse(await file.text());
+    if (!d || d.app !== 'excuses-register' || d.kind !== 'excuses-import' || !Array.isArray(d.items)) throw 0;
+    importData = d;
+    const items = d.items.filter(it => it && it.id && it.date), have = new Set(S.excuses.map(e => e.id));
+    const fresh = items.filter(it => !have.has(it.id)), matched = fresh.filter(it => matchStudent(it)), studs = new Set(matched.map(it => matchStudent(it).id));
+    confirmBox('استيراد أعذار', `الملف فيه ${items.length} عذر. الجديد منها ${fresh.length}، يتبع ${studs.size} طالبة. تُضاف إلى الموجود ولا يُحذف شيء.` + (fresh.length - matched.length ? ` (${fresh.length - matched.length} عذر لم تُعرف صاحبته وسيظهر في القائمة بعد الاستيراد)` : ''), 'استيراد الأعذار', async () => {
+      const dd = importData; importData = null; let added = 0, dup = 0; const miss = [];
+      const list = dd.items.filter(it => it && it.id && it.date), haveNow = new Set(S.excuses.map(e => e.id));
+      for (let i = 0; i < list.length; i++) {
+        const it = list[i];
+        if (haveNow.has(it.id)) { dup++; continue; }
+        const s = matchStudent(it); if (!s) { miss.push((it.name || 'بدون اسم') + (it.date ? ' · ' + it.date : '')); continue; }
+        if (i % 5 === 0) toast('جارٍ الاستيراد… ' + (i + 1) + ' من ' + list.length);
+        const ex = {id:it.id, studentId:s.id, created:Date.now(), date:it.date, dateTo:it.dateTo && it.dateTo >= it.date ? it.dateTo : it.date, category:CATS.some(c => c[0] === it.category) ? it.category : 'other', notes:String(it.notes || '').slice(0, 500), photos:[], thumb:'', hasImage:false};
+        ex.days = Math.max(1, parseInt(it.days, 10) || schoolDays(ex.date, ex.dateTo));
+        const imgs = Array.isArray(it.images) ? it.images : (it.image ? [it.image] : []);
+        for (const data of imgs.slice(0, MAXPH)) {
+          if (typeof data !== 'string' || !data.startsWith('data:image/')) continue;
+          let thumb = ''; try { thumb = scaleTo(await loadImg(data), 200, .7); } catch (e) { continue; }
+          const iid = 'i' + uid(); await db.put('images', {id:iid, data}); ex.photos.push({id:iid, thumb});
+        }
+        ex.thumb = ex.photos.length ? ex.photos[0].thumb : ''; ex.hasImage = ex.photos.length > 0;
+        await db.put('excuses', ex); S.excuses.push(ex); haveNow.add(ex.id); added++;
+      }
+      render();
+      openModal(sheetHead('اكتمل الاستيراد') + `<div class="list"><div class="kv"><span>أُضيف</span><span>${added} عذر</span></div><div class="kv"><span>موجود من قبل (تُرك)</span><span>${dup}</span></div><div class="kv"><span>لم تُعرف صاحبته</span><span>${miss.length}</span></div></div>` + (miss.length ? `<p class="sub">هذه الأعذار لم تُضف لأن الاسم لا يطابق أي طالبة. أضيفيها يدوياً:</p><div class="list">${miss.map(m => `<div class="kv"><span>${esc(m)}</span></div>`).join('')}</div>` : '') + '<p class="sub">احذفي ملف الاستيراد من الجوال بعد التأكد، لأنه غير مشفّر.</p><button class="btn primary" data-act="close">تم</button>');
+    });
+  } catch (e) { toast('الملف ليس ملف استيراد أعذار صالحاً'); }
+}
 let restoreData = null;
 async function readRestore(file) {
   try {
@@ -943,12 +1165,12 @@ async function readRestore(file) {
         for (const s of ENC) for (const v of (r[s] || [])) if (v && v.id) await raw.put(s, v.ct ? {id:v.id, iv:unb64(v.iv), ct:unb64(v.ct)} : v);
         await raw.put('meta', {id:'key', salt:unb64(r.key.salt), iv:unb64(r.key.iv), wrapped:unb64(r.key.wrapped), iter:r.key.iter});
         if (r.prefs && typeof r.prefs === 'object') await raw.put('meta', {id:'prefs', alertDays:parseInt(r.prefs.alertDays, 10) || 5, autoLock:r.prefs.autoLock == null ? 5 : Number(r.prefs.autoLock) || 0, theme:['light','dark'].includes(r.prefs.theme) ? r.prefs.theme : 'auto', backupDays:r.prefs.backupDays == null ? 7 : Number(r.prefs.backupDays) || 0});
-        if (r.school && typeof r.school === 'object') await raw.put('meta', {id:'school', school:String(r.school.school || ''), school2:String(r.school.school2 || ''), admin:String(r.school.admin || ''), principal:String(r.school.principal || '')});
+        if (r.school && typeof r.school === 'object') await raw.put('meta', {id:'school', school:String(r.school.school || ''), school2:String(r.school.school2 || ''), admin:String(r.school.admin || ''), wakila:String(r.school.wakila || ''), principal:String(r.school.principal || '')});
         await raw.del('meta', 'pin'); await raw.put('meta', {id:'enc', done:true}); await raw.put('meta', {id:'seed', demo:false});
         S.classes = []; S.students = []; S.excuses = []; await renderLock(); toast('تمت الاستعادة. أدخلي رمز الدخول الخاص بهذه النسخة');
       } else {
         for (const s of ENC) for (const v of (r[s] || [])) if (v && v.id) await db.put(s, v);
-        if (r.school && typeof r.school === 'object') await raw.put('meta', {id:'school', school:String(r.school.school || ''), school2:String(r.school.school2 || ''), admin:String(r.school.admin || ''), principal:String(r.school.principal || '')});
+        if (r.school && typeof r.school === 'object') await raw.put('meta', {id:'school', school:String(r.school.school || ''), school2:String(r.school.school2 || ''), admin:String(r.school.admin || ''), wakila:String(r.school.wakila || ''), principal:String(r.school.principal || '')});
         await db.put('meta', {id:'seed', demo:false}); await loadAll(); nav = [{v:'home'}]; render(); toast('تمت الاستعادة');
       }
     });
@@ -974,12 +1196,20 @@ const ACT = {
   clearSearch: () => { q = ''; qd = ''; vHome(); },
   addClass: () => nameForm('فصل جديد', 'اسم الفصل (مثال: ثاني ثانوي / 3)', '', 'addClass'),
   renameClass: () => nameForm('تعديل اسم الفصل', 'اسم الفصل', cls(topId()).name, 'renameClass'),
-  renameStudent: () => { const s = stu(topId()); nameForm('تعديل بيانات الطالبة', 'اسم الطالبة', s.name, 'renameStudent', s.nid || ''); },
+  renameStudent: () => { const s = stu(topId()); nameForm('تعديل بيانات الطالبة', 'اسم الطالبة', s.name, 'renameStudent', s.nid || '', s.phone || ''); },
   bulk: bulkForm,
   quickExcuse: () => { openModal(sheetHead('تسجيل عذر جديد') + '<label class="field">اكتبي اسم الطالبة ثم اختاريها<input id="qs" type="search" autocomplete="off" placeholder="أول حروف الاسم"></label><div id="qsList"></div>'); qsList(); },
   pickStudent: el => { const s = stu(el.dataset.id); if (!s) return; closeModal(); nav = [{v:'home'}, {v:'cls', id:s.classId}, {v:'stu', id:s.id}]; render(); excuseForm(null); },
   newExcuse: () => excuseForm(null),
   batchExcuse: () => batchForm(),
+  openAtt: () => tabTo('att'),
+  openAttCls: el => { attDraft = null; go({v:'attcls', id:el.dataset.id}); },
+  openAttReport: () => { rpMode = 'att'; if (!rp || rp.k === 'all') rp = rpPreset('week'); tabTo('report'); },
+  rpMode: el => { rpMode = el.dataset.m; vReport(); },
+  toggleAbs: el => { if (!attDraft) return; const id = el.dataset.id; if (attDraft.absent[id]) delete attDraft.absent[id]; else { const ex = excuseOn(id, attDraft.date); attDraft.absent[id] = {reason:ex ? (CAT2ABS[ex.category] || 'other') : 'none'}; } const y = window.scrollY; renderAttRows(); window.scrollTo(0, y); },
+  allPresent: () => { if (!attDraft) return; attDraft.absent = {}; renderAttRows(); },
+  saveAtt: async () => { if (!attDraft) return; const rec = {id:attId(attDraft.date, attDraft.cid), date:attDraft.date, classId:attDraft.cid, absent:attDraft.absent, takenAt:Date.now()}; await db.put('att', rec); S.att = S.att.filter(a => a.id !== rec.id).concat(rec); const n = Object.keys(rec.absent).length; attDraft = null; back(); toast('حُفظ التحضير' + (n ? ' · ' + n + ' غائبة' : ' · الكل حاضرات')); try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {} },
+  pdfDaily: () => pdfDaily(), pdfFrequent: () => pdfFrequent(), pdfDisc: () => pdfDisc(), pdfAttRep: () => pdfAttRep(),
   rmBatch: el => { if (!bp) return; syncBatch(); bp.rows.splice(+el.dataset.i, 1); renderBatch(); },
   editExcuse: el => excuseForm(S.excuses.find(e => e.id === el.dataset.id)),
   confirmOk: async () => { const cb = confirmCb; confirmCb = null; closeModal(); if (cb) await cb(); },
@@ -1021,6 +1251,7 @@ document.addEventListener('click', e => {
   Promise.resolve(ACT[el.dataset.act](el)).catch(err => { console.error(err); toast('حدث خطأ غير متوقع، أعيدي المحاولة'); });
 });
 document.addEventListener('input', e => {
+  if (e.target.id === 'attDate') { attDate = e.target.value || todayISO(); attDraft = null; vAtt(); return; }
   if (e.target.id === 'qs') qsList();
   else if (e.target.id === 'q') { q = e.target.value; homeList(); }
   else if (e.target.id === 'qd') { qd = e.target.value; homeList(); }
@@ -1033,6 +1264,7 @@ document.addEventListener('input', e => {
   else if (e.target.id === 'rpFrom' || e.target.id === 'rpTo') { rp = {k:'custom', from:$('#rpFrom').value, to:$('#rpTo').value}; rpBody(); }
 });
 document.addEventListener('change', async e => {
+  if (e.target.classList && e.target.classList.contains('absReason') && attDraft) { const a = attDraft.absent[e.target.dataset.id]; if (a) a.reason = e.target.value; return; }
   if (e.target.id === 'bCatAll' && bp) { syncBatch(); bp.rows.forEach(o => o.cat = e.target.value); renderBatch(); return; }
   if (e.target.id === 'clsSchool') { const c = cls(topId()); if (!c) return; c.school = e.target.value === '2' ? 2 : 1; try { await db.put('classes', c); toast('حُفظت مدرسة الفصل'); } catch (err) { toast('تعذر الحفظ'); } return; }
   const t = e.target, f = t.files && t.files[0]; if (!f) return;
@@ -1061,6 +1293,7 @@ document.addEventListener('change', async e => {
       if (!list.length) return toast('لم نجد أسماء في الملف. الصقي الأسماء يدوياً في المربع.');
       $('#bulkText').value = list.map(r => (r.nid ? r.nid + '  ' : '') + r.name).join('\n'); $('#bulkCount').textContent = list.length + ' اسم' + (list.some(r => r.nid) ? ' مع السجل المدني' : '') + ' — راجعي القائمة ثم اضغطي إضافة';
     } else if (t.id === 'restoreFile') await readRestore(f);
+    else if (t.id === 'importFile') await readImport(f);
   } catch (err) {
     console.error(err);
     if (t.id === 'bulkFile') toast('تعذرت قراءة الملف. جرّبي حفظه بصيغة CSV أو الصقي الأسماء.');
@@ -1073,7 +1306,7 @@ document.addEventListener('submit', async e => {
   try {
     if (f.id === 'schoolForm') {
       const cl = id => $(id).value.replace(/\s+/g, ' ').trim();
-      S.school = {id:'school', school:cl('#scSchool'), school2:cl('#scSchool2'), admin:cl('#scAdmin'), principal:cl('#scPrincipal')};
+      S.school = {id:'school', school:cl('#scSchool'), school2:cl('#scSchool2'), admin:cl('#scAdmin'), wakila:cl('#scWakila'), principal:cl('#scPrincipal')};
       await raw.put('meta', S.school); toast('حُفظت بيانات المدرسة');
     } else if (f.id === 'prefsForm') {
       S.prefs = {id:'prefs', alertDays:Math.min(99, Math.max(1, parseInt($('#pfAlert').value, 10) || 5)), autoLock:Number($('#pfLock').value) || 0, theme:$('#pfTheme').value, backupDays:Number($('#pfBackup').value) || 0};
@@ -1101,7 +1334,7 @@ document.addEventListener('submit', async e => {
     } else if (f.id === 'nameForm') {
       const v = $('#nameInput').value.replace(/\s+/g, ' ').trim(), kind = f.dataset.kind; if (!v) return;
       if (kind === 'addClass') { const c = {id:'c' + uid(), name:v, created:Date.now()}; await db.put('classes', c); S.classes.push(c); closeModal(); go({v:'cls', id:c.id}); return; }
-      const o = kind === 'renameClass' ? cls(topId()) : stu(topId()); o.name = v; if (kind === 'renameStudent' && $('#nidInput')) { const raw = $('#nidInput').value.trim(), nid = cleanNid(raw); if (raw && !nid) return toast('رقم السجل المدني غير صحيح'); o.nid = nid; } await db.put(kind === 'renameClass' ? 'classes' : 'students', o); closeModal(); render();
+      const o = kind === 'renameClass' ? cls(topId()) : stu(topId()); o.name = v; if (kind === 'renameStudent' && $('#nidInput')) { const raw = $('#nidInput').value.trim(), nid = cleanNid(raw); if (raw && !nid) return toast('رقم السجل المدني غير صحيح'); o.nid = nid; const ph = toLatin($('#phoneInput').value).replace(/[^0-9+]/g, ''); if (ph && ph.replace(/\D/g, '').length < 9) return toast('رقم الجوال غير صحيح'); o.phone = ph; } await db.put(kind === 'renameClass' ? 'classes' : 'students', o); closeModal(); render();
     } else if (f.id === 'bulkForm') {
       const cid = topId(), have = new Map(stuOf(cid).map(s => [norm(s.name), s])); let added = 0, upd = 0;
       for (const r of bulkEntries()) {
