@@ -258,6 +258,9 @@ main.wrap{padding-block:18px calc(104px + env(safe-area-inset-bottom,0px));displ
 .exhint{font-size:.8rem;color:var(--ok)}
 .stickybar{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:5;display:flex;gap:10px;padding:10px;margin-inline:-6px;border-radius:20px;background:color-mix(in srgb,var(--bg) 85%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .stickybar .btn{flex:1}
+.formcard{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border-radius:var(--r);border:0;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;text-align:start;font:inherit;box-shadow:var(--shadow);cursor:pointer}
+.formcard .fic{width:50px;height:50px;border-radius:14px;background:rgba(255,255,255,.18);display:grid;place-items:center;flex:none}.formcard .fic svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.formcard .txt{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}.formcard b{font-size:1.02rem}.formcard .txt span{font-size:.8rem;opacity:.9}.formcard>svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;opacity:.8;flex:none}
 .amode{display:grid;grid-template-columns:1fr 1fr;gap:10px}.amode .chipbtn{min-height:46px;font-weight:600}
 body:has(.stickybar) #toast{bottom:calc(156px + env(safe-area-inset-bottom,0px))}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--surface-2)}
@@ -336,6 +339,7 @@ const IC = {
   cam:'<svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg>',
   img:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>',
   file:'<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>',
+  print:'<svg viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
   pdf:'<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg>',
   x:'<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
   chart:'<svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17v-5"/><path d="M13 17V8"/><path d="M18 17v-3"/></svg>',
@@ -718,6 +722,7 @@ function dashHTML() {
   if (list.length) h += `<div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:.9rem;font-weight:600">يحتاج متابعة (${list.length})</div><div class="dalerts">${list.slice(0, 6).map(x => { const c = cls(x.s.classId); return `<button class="dalert" data-act="openStudent" data-id="${x.s.id}">${avatar(x.s.name)}<span class="txt"><span class="name">${esc(x.s.name)}</span><span class="sub">${esc(c ? c.name : '')}</span></span><span class="tag ${x.red ? 'red' : ''}">${esc(x.tag)}</span></button>`; }).join('')}${list.length > 6 ? `<button class="btn small" data-act="dashMonth">عرض الكل (${list.length})</button>` : ''}</div></div>`;
   // تذكيرات
   const rem = [], hp = hParts(t);
+  if (!we && S.classes.some(c => attOf(t, c.id))) rem.push(['dashOfficial', 'اطبعي كشف حضور وغياب طلاب المدرسة (النموذج الورقي)']);
   if (new Date(t + 'T12:00:00').getDay() === 4) rem.push(['dashWeek', 'اليوم الخميس: جهّزي استمارة الحصر الأسبوعي وسلّميها للوكيلة']);
   if (hp && hp.d >= 27) rem.push(['dashMonth', 'نهاية الشهر الهجري: جهّزي حصر كثيرات الغياب']);
   if (!S.prefs.termStart) rem.push(['settings', 'حدّدي تاريخ بداية الفترة الدراسية ليُحسب رقم الأسبوع']);
@@ -833,7 +838,8 @@ function vAtt() {
     ${isWeekend(attDate) ? '<div class="notice">هذا اليوم عطلة نهاية الأسبوع.</div>' : ''}
     <div class="stats"><div class="stat"><b>${done.length}/${recs.length}</b><span>فصول محضّرة</span></div><div class="stat"><b>${reg - abs}</b><span>حاضرة</span></div><div class="stat"><b>${abs}</b><span>غائبة</span></div></div>
     ${recs.length ? `<div class="list">${recs.map(r => { const n = r.rec ? Object.keys(r.rec.absent || {}).length : 0; return `<button class="item" data-act="openAttCls" data-id="${r.c.id}"><span class="txt"><span class="name">${esc(r.c.name)}</span><span class="sub">${r.st} طالبة</span></span><span class="count ${r.rec ? (n ? 'warn' : 'has') : ''}">${r.rec ? (n ? n + ' غائبة' : 'الكل حاضرات') : 'لم يُحضَّر'}</span>${IC.chev}</button>`; }).join('')}</div>` : '<div class="empty">' + IC.users + '<span>أضيفي الفصول أولاً من الرئيسية.</span></div>'}
-    <div class="actions"><button class="btn primary grow" data-act="pdfDaily" ${done.length ? '' : 'disabled'}>${IC.pdf} الكشف اليومي (PDF)</button><button class="btn grow" data-act="openWeek">${IC.file} الحصر الأسبوعي</button></div><div class="actions"><button class="btn grow" data-act="openAttReport">${IC.chart} الحصر الأسبوعي والشهري</button></div>`;
+    <button class="formcard" data-act="pdfOfficial"><span class="fic">${IC.print}</span><span class="txt"><b>كشف حضور وغياب طلاب المدرسة</b><span>النموذج الورقي (و.ط.ع.ن-03-30) بنفس التقسيم، جاهز للطباعة</span></span>${IC.chev}</button>
+    <div class="actions"><button class="btn grow" data-act="pdfDaily" ${done.length ? '' : 'disabled'}>${IC.pdf} الكشف اليومي (PDF)</button><button class="btn grow" data-act="openWeek">${IC.file} الحصر الأسبوعي</button></div><div class="actions"><button class="btn grow" data-act="openAttReport">${IC.chart} الحصر الأسبوعي والشهري</button></div>`;
 }
 function vAttCls(top) {
   const c = cls(top.id); if (!c) return back();
@@ -964,6 +970,8 @@ async function vSettings() {
     <label class="field">اسم الإدارية المسؤولة<input id="scAdmin" maxlength="80" autocomplete="off" value="${esc(sc.admin || '')}"></label>
     <label class="field">اسم الوكيلة الطلابية<input id="scWakila" maxlength="80" autocomplete="off" value="${esc(sc.wakila || '')}"></label>
     <label class="field">اسم مديرة المدرسة<input id="scPrincipal" maxlength="80" autocomplete="off" value="${esc(sc.principal || '')}"></label>
+    <label class="field">الإدارة العامة للتعليم (لرأس النموذج الورقي)<input id="scGov" maxlength="90" autocomplete="off" value="${esc(sc.gov || GOV_DEF)}"></label>
+    <label class="field">مكتب التعليم<input id="scOffice" maxlength="90" autocomplete="off" value="${esc(sc.office || OFFICE_DEF)}"></label>
     <button class="btn primary" type="submit">حفظ بيانات المدرسة</button></form></section>
     <section class="group"><h2>${IC.bell} الفترة الدراسية والتنبيه والمظهر</h2>
     <form id="prefsForm" style="display:flex;flex-direction:column;gap:12px">
@@ -1242,6 +1250,92 @@ async function pdfWeek() {
   await d.sign(y); await d.flush();
   fileReady('استمارة الحصر الأسبوعي ' + (n > 0 ? 'الأسبوع ' + n + ' ' : '') + wk.start + '.pdf', d.blob(), 'pdf');
 }
+/* ---------- النموذج الورقي: كشف حضور وغياب طلاب المدرسة (و.ط.ع.ن-03-30) ---------- */
+const GOV_DEF = 'الإدارة العامة للتعليم بمنطقة مكة المكرمة', OFFICE_DEF = 'مكتب التعليم بالتنعيم';
+function gradeSplit(name) { const m = String(name).match(/^(\S+\s+(?:ثانوي|متوسط|ابتدائي))\s*(.*)$/); if (!m) return ['', name]; const rest = m[2].replace(/\//g, ' ').replace(/\s+/g, ' ').trim(); return [m[1], rest || name]; }
+async function pdfOfficial(date) {
+  if (!S.classes.length) return toast('أضيفي الفصول أولاً');
+  toast('جارٍ تجهيز النموذج…');
+  const BF = '"IBM Plex Sans Arabic",Tahoma,sans-serif', HF = '"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif';
+  try { await Promise.all([document.fonts.load('600 30px "Readex Pro"', 'س'), document.fonts.load('400 24px "IBM Plex Sans Arabic"', 'س'), document.fonts.load('600 24px "IBM Plex Sans Arabic"', 'س')]); } catch (e) {}
+  const W = 1240, H = 1754, M = 50, R = W - M, INK = '#111', GR = '#3A3A3A', RH = 44, sc = S.school || {};
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d'); const pages = [];
+  const COLS = [['الفصل',100,1],['المسجلون',60,1],['الحضور',60,1],['الغياب',60,1],['الاسم',300,0],['بعذر',50,1],['بدون عذر',55,1],['رقم الهاتف',120,0],['الزمن',65,1],['المجيب',75,1],['سبب الغياب',105,0],['توقيع المعلم',90,1]];
+  const xs = [R]; COLS.forEach((c, i) => xs.push(xs[i] - c[1]));   // الحواف من اليمين لليسار
+  const cx = i => (xs[i] + xs[i + 1]) / 2;
+  const line = (x1, y1, x2, y2, w) => { x.strokeStyle = INK; x.lineWidth = w || 1.4; x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke(); };
+  const txt = (t, px, py, font, al, color) => { x.font = font; x.textAlign = al || 'center'; x.fillStyle = color || INK; x.fillText(t, px, py); };
+  const rot = (t, px, py, font) => { x.save(); x.translate(px, py); x.rotate(-Math.PI / 2); x.font = font; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = INK; x.fillText(t, 0, 0); x.restore(); x.textBaseline = 'alphabetic'; };
+  const check = (px, py) => { x.strokeStyle = INK; x.lineWidth = 3; x.beginPath(); x.moveTo(px - 10, py); x.lineTo(px - 3, py + 8); x.lineTo(px + 11, py - 9); x.stroke(); };
+  let hd = date; try { const o = {}; new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn', {day:'numeric', month:'numeric', year:'numeric'}).formatToParts(new Date(date + 'T12:00:00')).forEach(q => o[q.type] = q.value); if (o.day && o.month && o.year) hd = [String(parseInt(o.year, 10)), 'هـ', '  /  ', String(parseInt(o.month, 10)), '  /  ', String(parseInt(o.day, 10))]; } catch (e) {}
+  const schools = [sc.school, sc.school2].filter(Boolean).join(' – ');
+  let pageNo = 0;
+  const head = grade => {
+    pageNo++; x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); x.direction = 'rtl'; x.textBaseline = 'alphabetic';
+    x.fillStyle = GR; x.fillRect(M, 30, W - 2 * M, 150);
+    txt('وزارة التعليم', R - 30, 92, '600 36px ' + HF, 'right', '#fff'); txt('Ministry of Education', R - 30, 128, '20px ' + BF, 'right', '#ddd');
+    txt(sc.gov || GOV_DEF, M + 30, 80, '600 23px ' + BF, 'left', '#fff'); txt(sc.office || OFFICE_DEF, M + 30, 116, '600 23px ' + BF, 'left', '#fff');
+    const bw = 680, bx = (W - bw) / 2; x.fillStyle = GR; x.beginPath(); x.roundRect ? x.roundRect(bx, 150, bw, 72, 18) : x.rect(bx, 150, bw, 72); x.fill();
+    x.fillStyle = '#fff'; x.font = '600 27px ' + HF; x.textAlign = 'center'; x.fillText(fit(x, 'مدرسة : ' + (schools || '...................'), bw - 40), W / 2, 197);
+    txt('اسم النموذج : كشف حضور وغياب طلاب المدرسة', R, 262, '20px ' + BF, 'right'); txt('رمز النموذج : ( و.ط.ع.ن - 03 - 30 )', M, 262, '20px ' + BF, 'left');
+    let y = 274; const tw = (W - 2 * M) / 3;
+    x.strokeStyle = INK; x.lineWidth = 1.6; x.strokeRect(M, y, W - 2 * M, 46);
+    [['الصف', grade || ''], ['اليوم', dayName(date)], ['التاريخ', hd]].forEach(([l, v], i) => { const r = R - i * tw; if (i) line(r, y, r, y + 46); line(r - 90, y, r - 90, y + 46); txt(l, r - 45, y + 31, '600 21px ' + BF); const vc = r - 90 - (tw - 90) / 2;
+      if (Array.isArray(v)) { x.font = '22px ' + BF; const ws = v.map(q => x.measureText(q).width), tot = ws.reduce((a2, b2) => a2 + b2, 0); let px = vc - tot / 2; x.textAlign = 'left'; x.fillStyle = INK; v.forEach((q, qi) => { x.fillText(q, px, y + 31); px += ws[qi]; }); }
+      else txt(fit(x, v, tw - 110), vc, y + 31, '22px ' + BF); });
+    y += 46 + 10;
+    // رأس الجدول بطبقتين
+    const hh = 116, sub = 40; x.strokeRect(M, y, W - 2 * M, hh);
+    COLS.forEach((c, i) => {
+      if (i > 0 && i !== 6) line(xs[i], y + (i === 5 ? 0 : 0), xs[i], y + hh);
+      if (i === 5 || i === 6) return;
+      if (c[2]) rot(c[0], cx(i), y + hh / 2, '600 19px ' + BF); else { x.font = '600 21px ' + BF; const f = x.measureText(c[0]).width > c[1] - 10 ? '600 18px ' : '600 21px '; txt(c[0], cx(i), y + hh / 2 + 8, f + BF); }
+    });
+    line(xs[6], y + sub, xs[6], y + hh); line(xs[5], y + sub, xs[7], y + sub);
+    txt('نوع الغياب', (xs[5] + xs[7]) / 2, y + 28, '600 19px ' + BF);
+    rot('بعذر', cx(5), y + sub + (hh - sub) / 2, '600 18px ' + BF); rot('بدون عذر', cx(6), y + sub + (hh - sub) / 2, '600 18px ' + BF);
+    return y + hh;
+  };
+  const foot = async (y, last) => {
+    if (last) { const fy = Math.min(y + 60, H - 70); txt('اسم المسئول / ' + (sc.admin || ''), R, fy, '600 23px ' + BF, 'right'); txt('التوقيع : ....................................', W / 2 - 40, fy, '600 23px ' + BF, 'center'); }
+    if (pageNo > 1 || !last) txt('صفحة ' + pageNo, M, H - 30, '18px ' + BF, 'left', '#666');
+    const blob = await new Promise(res => cv.toBlob(res, 'image/jpeg', .9)); if (!blob) throw new Error('page'); pages.push(new Uint8Array(await blob.arrayBuffer()));
+  };
+  // تجميع الفصول حسب الصف
+  const groups = []; S.classes.forEach(c => { const [g, lbl] = gradeSplit(c.name); let G = groups.find(o => o.g === g); if (!G) groups.push(G = {g, list:[]}); G.list.push({c, lbl}); });
+  for (let gi = 0; gi < groups.length; gi++) {
+    const G = groups[gi]; let y = head(G.g);
+    for (const {c, lbl} of G.list) {
+      const st = stuOf(c.id), rec = attOf(date, c.id), ab = rec ? st.filter(s => rec.absent && rec.absent[s.id]) : [], n = Math.max(4, ab.length);
+      let i = 0;
+      while (i < n) {
+        const fitRows = Math.floor((H - 150 - y) / RH);
+        if (fitRows < Math.min(4, n - i)) { await foot(y, false); y = head(G.g); continue; }
+        const k = Math.min(n - i, fitRows), top = y, bh = k * RH;
+        x.strokeStyle = INK; x.lineWidth = 1.6; x.strokeRect(M, top, W - 2 * M, bh);
+        COLS.forEach((cc, ci) => { if (ci > 0) line(xs[ci], top, xs[ci], top + bh); });
+        for (let r = 1; r < k; r++) line(xs[4], top + r * RH, M, top + r * RH, 1);
+        // الخلايا المدمجة
+        x.font = '600 20px ' + BF; const ls = wrapText(x, lbl, COLS[0][1] - 12, 3); ls.forEach((l, li) => txt(l, cx(0), top + bh / 2 - (ls.length - 1) * 13 + li * 26 + 7, '600 20px ' + BF));
+        if (rec) { [st.length, st.length - ab.length, ab.length].forEach((v, vi) => txt(String(v), cx(vi + 1), top + bh / 2 + 8, '600 23px ' + BF)); }
+        for (let r = 0; r < k; r++) {
+          const idx = i + r, ry = top + r * RH, by = ry + 30, s = ab[idx];
+          txt((idx + 1) + ')', xs[4] - 8, by, '20px ' + BF, 'right');
+          if (!rec && idx === 0) { txt('لم يُحضَّر', xs[4] - 42, by, '19px ' + BF, 'right', '#888'); continue; }
+          if (!s) continue;
+          x.font = '600 19px ' + BF; txt(fit(x, s.name, COLS[4][1] - 50), xs[4] - 40, by, '600 19px ' + BF, 'right');
+          const rr = effReason(s.id, date, rec.absent[s.id].reason);
+          check(cx(rr === 'none' ? 6 : 5), ry + RH / 2);
+          if (s.phone) txt(s.phone, cx(7), by, '19px ' + BF);
+          if (rr !== 'none') { x.font = '18px ' + BF; txt(fit(x, absName(rr), COLS[10][1] - 10), cx(10), by, '18px ' + BF); }
+        }
+        y = top + bh; i += k;
+      }
+    }
+    await foot(y, true);
+  }
+  fileReady('كشف حضور وغياب طلاب المدرسة ' + date + '.pdf', buildPDF(pages, W, H), 'pdf');
+}
 async function pdfDaily() {
   const date = attDate || todayISO(), list = S.classes.map(c => ({c, st:stuOf(c.id), rec:attOf(date, c.id)}));
   if (!list.some(r => r.rec)) return toast('لم يُحضَّر أي فصل في هذا اليوم');
@@ -1435,6 +1529,7 @@ const ACT = {
   allPresent: () => { if (!attDraft) return; attDraft.absent = {}; renderAttRows(); toast('كل الطالبات حاضرات'); },
   allAbsent: () => { if (!attDraft) return; stuOf(attDraft.cid).forEach(s => { if (!attDraft.absent[s.id]) { const ex = excuseOn(s.id, attDraft.date); attDraft.absent[s.id] = {reason:ex ? (CAT2ABS[ex.category] || 'other') : 'none'}; } }); renderAttRows(); toast('غُيّبت كل الطالبات. اضغطي الآن على الحاضرات فقط'); },
   saveAtt: async () => { if (!attDraft) return; const rec = {id:attId(attDraft.date, attDraft.cid), date:attDraft.date, classId:attDraft.cid, absent:attDraft.absent, takenAt:Date.now()}; await db.put('att', rec); S.att = S.att.filter(a => a.id !== rec.id).concat(rec); const n = Object.keys(rec.absent).length; attDraft = null; back(); toast('حُفظ التحضير' + (n ? ' · ' + n + ' غائبة' : ' · الكل حاضرات')); try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {} },
+  pdfOfficial: () => pdfOfficial(attDate || todayISO()), dashOfficial: () => { attDate = todayISO(); pdfOfficial(attDate); },
   pdfDaily: () => pdfDaily(), pdfFrequent: () => pdfFrequent(), pdfDisc: () => pdfDisc(), pdfAttRep: () => pdfAttRep(),
   rmBatch: el => { if (!bp) return; syncBatch(); bp.rows.splice(+el.dataset.i, 1); renderBatch(); },
   editExcuse: el => excuseForm(S.excuses.find(e => e.id === el.dataset.id)),
@@ -1540,7 +1635,7 @@ document.addEventListener('submit', async e => {
   try {
     if (f.id === 'schoolForm') {
       const cl = id => $(id).value.replace(/\s+/g, ' ').trim();
-      S.school = {id:'school', school:cl('#scSchool'), school2:cl('#scSchool2'), admin:cl('#scAdmin'), wakila:cl('#scWakila'), principal:cl('#scPrincipal')};
+      S.school = {id:'school', school:cl('#scSchool'), school2:cl('#scSchool2'), admin:cl('#scAdmin'), wakila:cl('#scWakila'), principal:cl('#scPrincipal'), gov:cl('#scGov'), office:cl('#scOffice')};
       await raw.put('meta', S.school); toast('حُفظت بيانات المدرسة');
     } else if (f.id === 'prefsForm') {
       S.prefs = {id:'prefs', alertDays:Math.min(99, Math.max(1, parseInt($('#pfAlert').value, 10) || 5)), autoLock:Number($('#pfLock').value) || 0, theme:$('#pfTheme').value, backupDays:Number($('#pfBackup').value) || 0, term:Number($('#pfTerm').value) || 1, termStart:$('#pfTermStart').value || ''};
